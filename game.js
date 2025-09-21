@@ -146,8 +146,8 @@ const assets = {
 };
 
 // --- PNGTuberの状態管理 ---
-let pngtuberState = 'normal'; // normal, damage, ult
-let pngtuberTimer = 0;
+let pngtuberState = 'normal'; // normal, damage, ult, damage_hold, ult_hold
+let isVoicePlaying = false;
 let blinkTimer = 0;
 let pngtuberImage = null;
 
@@ -332,10 +332,17 @@ class Player {
         if (!ultReady) return; // ULTが準備できていない場合は何もしない
         ultReady = false;
         ultGauge = 0;
-        pngtuberState = 'ult';
-        pngtuberTimer = 120; // 2秒間ULT表情
+        
+        isVoicePlaying = true;
+        pngtuberState = 'ult_hold';
         const ultVoice = assets.voices.ult[Math.floor(Math.random() * assets.voices.ult.length)];
-        if (ultVoice) ultVoice.play();
+        if (ultVoice) {
+            ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 7);
+            ultVoice.play();
+            ultVoice.onended = () => { isVoicePlaying = false; };
+        } else {
+            isVoicePlaying = false; // In case there are no voices
+        }
 
         assets.currentUltCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
         setCurrentState(gameState.ULT_CUTIN);
@@ -345,10 +352,17 @@ class Player {
         if (this.hitTimer === 0) {
             this.health -= amount;
             this.hitTimer = 60; // 1秒間無敵
-            pngtuberState = 'damage';
-            pngtuberTimer = 60; // 1秒間ダメージ表情
+
+            isVoicePlaying = true;
+            pngtuberState = 'damage_hold';
             const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
-            if (damageVoice) damageVoice.play();
+            if (damageVoice) {
+                damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 7);
+                damageVoice.play();
+                damageVoice.onended = () => { isVoicePlaying = false; };
+            } else {
+                isVoicePlaying = false; // In case there are no voices
+            }
 
             if (this.health <= 0) {
                 setCurrentState(gameState.GAMEOVER_BLACKOUT);
@@ -506,8 +520,8 @@ class Boss {
         this.x = canvas.width;
         this.y = canvas.height / 2 - this.height / 2;
         this.image = assets.bosses[Math.floor(Math.random() * assets.bosses.length)];
-        this.health = 120; // 体力を増加
-        this.maxHealth = 120;
+        this.health = 100;
+        this.maxHealth = 100;
         this.speedX = -1;
         this.speedY = 1;
         this.shootCooldown = 0;
@@ -680,7 +694,6 @@ function loadAudio(src) {
 }
 
 async function loadAssets() {
-    console.log("アセットの読み込みを開始します。");
     const imageTypes = ['player', 'enemies', 'bosses', 'backgrounds', 'cutins'];
     const audioTypes = ['bgm'];
     const promises = [];
@@ -691,10 +704,8 @@ async function loadAssets() {
     audioTypes.forEach(type => assetsToLoad += assetPaths[type].length);
     Object.keys(assetPaths.pngtuber).forEach(() => assetsToLoad++);
     Object.keys(assetPaths.voices).forEach(type => assetsToLoad += assetPaths.voices[type].length);
-    console.log(`読み込むアセットの総数: ${assetsToLoad}`);
 
     // Load images
-    console.log("通常画像の読み込み中...");
     for (const type of imageTypes) {
         for (const path of assetPaths[type]) {
             promises.push(loadImage(path).then(img => assets[type].push(img)));
@@ -702,13 +713,11 @@ async function loadAssets() {
     }
 
     // Load PNGTuber images
-    console.log("PNGTuber画像の読み込み中...");
     for (const key in assetPaths.pngtuber) {
         promises.push(loadImage(assetPaths.pngtuber[key]).then(img => assets.pngtuber[key] = img));
     }
 
     // Load audio
-    console.log("BGMの読み込み中...");
     for (const type of audioTypes) {
         for (const path of assetPaths[type]) {
             promises.push(loadAudio(path).then(audio => assets[type].push(audio)));
@@ -716,7 +725,6 @@ async function loadAssets() {
     }
 
     // Load voice audio
-    console.log("ボイスの読み込み中...");
     for (const type in assetPaths.voices) {
         for (const path of assetPaths.voices[type]) {
             promises.push(loadAudio(path).then(audio => assets.voices[type].push(audio)));
@@ -725,7 +733,6 @@ async function loadAssets() {
 
     try {
         await Promise.all(promises);
-        console.log("すべてのアセットの読み込みが完了しました。");
         if (loading) {
             loading.style.display = 'none';
         }
@@ -755,8 +762,8 @@ function initGame() {
     gameBackground = assets.backgrounds[Math.floor(Math.random() * assets.backgrounds.length)];
     backgroundX = 0;
     pngtuberState = 'normal';
-    pngtuberTimer = 0;
     blinkTimer = 0;
+    isVoicePlaying = false;
 }
 
 // --- 当たり判定 ---
@@ -825,26 +832,20 @@ function isColliding(rect1, rect2) {
 
 // --- PNGTuber更新ロジック ---
 function updatePngtuber() {
-    if (pngtuberTimer > 0) {
-        pngtuberTimer--;
-        if (pngtuberTimer === 0) {
-            pngtuberState = 'normal';
-        }
-    }
-
     blinkTimer++;
 
     switch (pngtuberState) {
-        case 'damage':
-            // ダメージ中は表情を交互に
-            pngtuberImage = (Math.floor(pngtuberTimer / 10) % 2 === 0) ? assets.pngtuber.dd : assets.pngtuber.co;
+        case 'damage_hold':
+            pngtuberImage = assets.pngtuber.dd;
+            if (player.hitTimer === 0 && !isVoicePlaying) {
+                pngtuberState = 'normal';
+            }
             break;
-        case 'ult':
-            // ULT中は表情を高速で切り替え
-            const ultFaceNum = Math.floor(pngtuberTimer / 8) % 3;
-            if (ultFaceNum === 0) pngtuberImage = assets.pngtuber.oo;
-            else if (ultFaceNum === 1) pngtuberImage = assets.pngtuber.oc;
-            else pngtuberImage = assets.pngtuber.co;
+        case 'ult_hold':
+            pngtuberImage = assets.pngtuber.oo;
+            if (!isVoicePlaying) {
+                pngtuberState = 'normal';
+            }
             break;
         case 'normal':
         default:
@@ -998,16 +999,17 @@ function drawImageWithAspectRatio(img, x, y, width, height) {
 }
 
 function drawUI() {
-    const tuberSize = 150;
+    const tuberSize = 300;
     const padding = 10;
+    const tuberY = padding;
 
     // PNGTuberの描画
     if (pngtuberImage) {
-        ctx.drawImage(pngtuberImage, padding, padding, tuberSize, tuberSize);
+        ctx.drawImage(pngtuberImage, padding, tuberY, tuberSize, tuberSize);
     }
 
     const textX = tuberSize + padding * 2;
-    const textY = padding + 30; 
+    const textY = tuberY + 30; 
 
     ctx.fillStyle = '#fff';
     ctx.font = '24px "MS Gothic"';
@@ -1291,10 +1293,12 @@ function stopAllBgm() {
 }
 
 function setVolume(volume) {
-    const audioElements = [...assets.bgm, ...assets.voices.damage, ...assets.voices.ult, endingVideo];
+    const audioElements = [...assets.bgm, endingVideo];
     audioElements.forEach(audio => {
         if(audio) audio.volume = volume;
     });
+
+    // Voice volume is handled separately when played
 
     if (volume > 0) {
         audioControls.muteButton.textContent = 'Mute';
