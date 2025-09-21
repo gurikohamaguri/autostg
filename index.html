@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>えいえんのアサリガール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="orientation-overlay">
+      <p>横向き画面でプレイしてください</p>
+      <div class="rotate-icon">📱🔄</div>
+    </div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>NOW LOADING</p>
+      <div id="progressBarContainer">
+        <div id="progressBar"></div>
+      </div>
+      <div class="loading-buttons">
+        <button id="reloadButton">リロード</button>
+        <button id="exitButton">ゲーム終了</button>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+    <button id="pauseButton">II</button>
+    <div id="audioControls">
+        <button id="muteButton">Mute</button>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+    </div>
+    <video id="endingVideo" style="display: none;"></video>
+
+    <div id="clearScreen" style="display: none;">
+        <div id="clearMenu">
+            <h1>GAME CLEAR</h1>
+            <p id="finalScore"></p>
+            <button id="playEndingBtn">エンディング再生</button>
+            <button id="backToTitleBtn">タイトルへ戻る</button>
+        </div>
+    </div>
+
+    <button id="ultButton">ULT</button>
+    <script src="game.js"></script>
+</body>
+</html>

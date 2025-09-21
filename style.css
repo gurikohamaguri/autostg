@@ -1,0 +1,228 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000;
+    font-family: 'Meiryo', sans-serif;
+}
+
+canvas {
+    display: block;
+}
+
+#pauseButton {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+    border-radius: 50%;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    z-index: 100;
+    line-height: 46px;
+    text-align: center;
+}
+
+#audioControls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+}
+
+#audioControls button, #audioControls input {
+    margin-left: 10px;
+}
+
+#endingVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background-color: #000;
+    z-index: 100;
+}
+
+#clearScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 50;
+    background-size: cover;
+    background-position: center;
+}
+
+#clearMenu {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    border-radius: 10px;
+    border: 2px solid #fff;
+}
+
+#clearMenu h1 {
+    font-size: 70px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+#clearMenu p {
+    font-size: 30px;
+    margin-bottom: 40px;
+}
+
+#clearMenu button {
+    font-size: 24px;
+    padding: 15px 30px;
+    margin: 0 15px;
+    border-radius: 5px;
+    border: 2px solid #fff;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#clearMenu button:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+#ultButton {
+    display: none; /* PCでは非表示 */
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 80px;
+    height: 80px;
+    background-color: rgba(255, 223, 0, 0.7); /* ゴールドっぽい色 */
+    color: black;
+    font-size: 24px;
+    font-weight: bold;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 100;
+}
+
+/* スマホ（タッチ操作可能で横向き）向けスタイル */
+@media (hover: none) and (orientation: landscape) {
+    html, body {
+        overflow: hidden; /* スクロールバーを消す */
+    }
+
+    #ultButton {
+        display: block; /* スマホでは表示 */
+    }
+
+    #audioControls {
+        /* PCでは右上だが、スマホでは左下に移動 */
+        top: auto;
+        bottom: 10px;
+        left: 10px;
+        right: auto;
+    }
+}
+
+/* ロード画面 */
+#loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    font-size: 30px;
+    font-family: "MS Gothic", sans-serif;
+}
+
+.loading-buttons {
+    display: flex;
+    margin-top: 20px;
+}
+
+#reloadButton, #exitButton {
+    padding: 10px 20px;
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #333;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 5px;
+}
+
+#exitButton {
+    margin-left: 15px;
+}
+
+#progressBarContainer {
+    width: 80%;
+    max-width: 400px;
+    height: 20px;
+    border: 1px solid #fff;
+    margin-top: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#progressBar {
+    width: 0%;
+    height: 100%;
+    background-color: #3498db;
+    transition: width 0.1s ease-out;
+}
+
+#orientation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    color: #fff;
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    text-align: center;
+    font-size: 24px;
+}
+
+.rotate-icon {
+    font-size: 80px;
+    margin-top: 20px;
+    animation: spin-horizontal 2.5s ease-in-out infinite;
+}
+
+@keyframes spin-horizontal {
+    0% { transform: rotate(0deg); }
+    40% { transform: rotate(90deg); }
+    60% { transform: rotate(90deg); }
+    100% { transform: rotate(0deg); }
+}
