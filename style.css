@@ -44,6 +44,12 @@ canvas {
     margin-left: 10px;
 }
 
+#voiceMuteButton:disabled {
+    background-color: #555;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
 #endingVideo {
     position: absolute;
     top: 0;
@@ -141,6 +147,11 @@ canvas {
         left: 10px;
         right: auto;
     }
+
+    #pngtuberContainer {
+        width: 150px;
+        height: 150px;
+    }
 }
 
 /* ロード画面 */
@@ -225,4 +236,52 @@ canvas {
     40% { transform: rotate(90deg); }
     60% { transform: rotate(90deg); }
     100% { transform: rotate(0deg); }
+}
+
+#gameUiContainer {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    align-items: flex-end;
+    z-index: 10;
+}
+
+#statsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 10px;
+    color: white;
+    font-size: 20px;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+#score, #life {
+    margin-bottom: 5px;
+}
+
+#ultGauge {
+    width: 150px;
+    height: 20px;
+    background-color: #555;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#ultGaugeBar {
+    width: 0%; /* 初期値 */
+    height: 100%;
+    background-color: #ff00ff;
+    transition: width 0.2s ease-in-out;
+}
+
+#pngtuberContainer {
+    width: 300px;
+    height: 300px;
+    /* background-image: url('path/to/your/pngtuber.png'); */ /* game.jsで設定 */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
 }

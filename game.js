@@ -11,6 +11,14 @@ const reloadButton = document.getElementById('reloadButton');
 const exitButton = document.getElementById('exitButton');
 const orientationOverlay = document.getElementById('orientation-overlay');
 const pauseButton = document.getElementById('pauseButton');
+const scoreEl = document.getElementById('score');
+const lifeEl = document.getElementById('life');
+const ultGaugeBarEl = document.getElementById('ultGaugeBar');
+const pngtuberContainer = document.getElementById('pngtuberContainer');
+const gameUiContainer = document.getElementById('gameUiContainer');
+const voiceMuteButton = document.getElementById('voiceMuteButton');
+
+let isVoiceMuted = false;
 
 if (reloadButton) {
     reloadButton.addEventListener('click', () => location.reload());
@@ -99,17 +107,20 @@ const assetPaths = {
         'assets/c/c_15.png', 'assets/c/c_16.png', 'assets/c/c_17.png', 'assets/c/c_18.png', 'assets/c/c_19.png',
         'assets/c/c_20.png', 'assets/c/c_21.png', 'assets/c/c_22.png'
     ],
-    bgm: [
-        'assets/bgm/bgm_0.mp3', 'assets/bgm/bgm_1.mp3', 'assets/bgm/bgm_2.mp3', 'assets/bgm/bgm_3.mp3', 'assets/bgm/bgm_4.mp3',
-        'assets/bgm/bgm_5.mp3', 'assets/bgm/bgm_6.mp3', 'assets/bgm/bgm_7.mp3', 'assets/bgm/bgm_8.mp3', 'assets/bgm/bgm_9.mp3',
-        'assets/bgm/bgm_10.mp3', 'assets/bgm/bgm_11.mp3', 'assets/bgm/bgm_12.mp3', 'assets/bgm/bgm_13.mp3', 'assets/bgm/bgm_14.mp3',
-        'assets/bgm/bgm_15.mp3', 'assets/bgm/bgm_16.mp3', 'assets/bgm/bgm_17.mp3', 'assets/bgm/bgm_18.mp3', 'assets/bgm/bgm_19.mp3',
-        'assets/bgm/bgm_20.mp3', 'assets/bgm/bgm_21.mp3', 'assets/bgm/bgm_22.mp3', 'assets/bgm/bgm_23.mp3', 'assets/bgm/bgm_24.mp3',
-        'assets/bgm/bgm_25.mp3', 'assets/bgm/bgm_26.mp3', 'assets/bgm/bgm_27.mp3', 'assets/bgm/bgm_28.mp3', 'assets/bgm/bgm_29.mp3',
-        'assets/bgm/bgm_30.mp3', 'assets/bgm/bgm_31.mp3', 'assets/bgm/bgm_32.mp3', 'assets/bgm/bgm_33.mp3', 'assets/bgm/bgm_34.mp3',
-        'assets/bgm/bgm_35.mp3', 'assets/bgm/bgm_36.mp3', 'assets/bgm/bgm_37.mp3', 'assets/bgm/bgm_38.mp3', 'assets/bgm/bgm_39.mp3',
-        'assets/bgm/bgm_40.mp3', 'assets/bgm/bgm_41.mp3', 'assets/bgm/bgm_42.mp3', 'assets/bgm/bgm_43.mp3'
-    ],
+    bgm: {
+        normal: [
+            'assets/bgm/normal/bgm_1.mp3', 'assets/bgm/normal/bgm_10.mp3', 'assets/bgm/normal/bgm_12.mp3', 'assets/bgm/normal/bgm_15.mp3', 'assets/bgm/normal/bgm_16.mp3',
+            'assets/bgm/normal/bgm_17.mp3', 'assets/bgm/normal/bgm_2.mp3', 'assets/bgm/normal/bgm_21.mp3', 'assets/bgm/normal/bgm_25.mp3', 'assets/bgm/normal/bgm_28.mp3',
+            'assets/bgm/normal/bgm_29.mp3', 'assets/bgm/normal/bgm_30.mp3', 'assets/bgm/normal/bgm_31.mp3', 'assets/bgm/normal/bgm_33.mp3', 'assets/bgm/normal/bgm_38.mp3',
+            'assets/bgm/normal/bgm_39.mp3', 'assets/bgm/normal/bgm_4.mp3', 'assets/bgm/normal/bgm_43.mp3', 'assets/bgm/normal/bgm_45.mp3', 'assets/bgm/normal/bgm_50.mp3',
+            'assets/bgm/normal/bgm_51.mp3', 'assets/bgm/normal/bgm_52.mp3', 'assets/bgm/normal/bgm_7.mp3', 'assets/bgm/normal/bgm_8.mp3', 'assets/bgm/normal/bgm_9.mp3'
+        ],
+        boss: [
+            'assets/bgm/boss/bbgm_18.mp3', 'assets/bgm/boss/bbgm_19.mp3', 'assets/bgm/boss/bbgm_20.mp3', 'assets/bgm/boss/bbgm_22.mp3', 'assets/bgm/boss/bbgm_23.mp3',
+            'assets/bgm/boss/bbgm_26.mp3', 'assets/bgm/boss/bbgm_44.mp3', 'assets/bgm/boss/bbgm_46.mp3', 'assets/bgm/boss/bbgm_47.mp3', 'assets/bgm/boss/bbgm_48.mp3',
+            'assets/bgm/boss/bbgm_49.mp3'
+        ]
+    },
     endings: [
         'assets/ed/Hallucination.mp4', 'assets/ed/one-page-at-a-time.mp4',
         'assets/ed/thanks-for-being-there-for-me.mp4', 'assets/ed/the-western-star-aglow.mp4'
@@ -123,19 +134,17 @@ const assetPaths = {
     },
     voices: {
         damage: [
-            'assets/voice/d1.mp3', 'assets/voice/d2.mp3', 'assets/voice/d3.mp3',
-            'assets/voice/d4.mp3', 'assets/voice/d5.mp3'
+            'assets/voice/d1.mp3', 'assets/voice/d11.mp3', 'assets/voice/d2-3.mp3', 'assets/voice/d21.mp3', 'assets/voice/d22.mp3'
         ],
         ult: [
-            'assets/voice/u1.mp3', 'assets/voice/u2.mp3', 'assets/voice/u3.mp3',
-            'assets/voice/u4.mp3', 'assets/voice/u5.mp3', 'assets/voice/u6.mp3'
+            'assets/voice/u12-1.mp3', 'assets/voice/u13.mp3', 'assets/voice/u14.mp3', 'assets/voice/u15.mp3', 'assets/voice/u2-2.mp3', 'assets/voice/u21.mp3', 'assets/voice/u22.mp3', 'assets/voice/u23.mp3', 'assets/voice/u3-1.mp3', 'assets/voice/u41.mp3', 'assets/voice/u51.mp3', 'assets/voice/u61.mp3', 'assets/voice/u7-1.mp3', 'assets/voice/u71.mp3', 'assets/voice/u81.mp3', 'assets/voice/u9-1.mp3', 'assets/voice/u91.mp3', 'assets/voice/u92.mp3'
         ],
     }
 };
 
 // --- 読み込んだアセットを格納 ---
 const assets = {
-    player: [], enemies: [], bosses: [], backgrounds: [], cutins: [], bgm: [], endings: [],
+    player: [], enemies: [], bosses: [], backgrounds: [], cutins: [], bgm: { normal: [], boss: [] }, endings: [],
     pngtuber: { oo: null, oc: null, co: null, cc: null, dd: null },
     voices: { damage: [], ult: [] },
     currentBgm: null,
@@ -329,21 +338,23 @@ class Player {
     }
 
     useUlt() {
-        if (!ultReady) return; // ULTが準備できていない場合は何もしない
+        if (!ultReady) return;
         ultReady = false;
         ultGauge = 0;
-        
-        isVoicePlaying = true;
-        pngtuberState = 'ult_hold';
-        const ultVoice = assets.voices.ult[Math.floor(Math.random() * assets.voices.ult.length)];
-        if (ultVoice) {
-            ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 7);
-            ultVoice.play();
-            ultVoice.onended = () => { isVoicePlaying = false; };
-        } else {
-            isVoicePlaying = false; // In case there are no voices
+    
+        if (!isVoiceMuted) {
+            isVoicePlaying = true;
+            pngtuberState = 'ult_hold';
+            const ultVoice = assets.voices.ult[Math.floor(Math.random() * assets.voices.ult.length)];
+            if (ultVoice) {
+                ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
+                ultVoice.play();
+                ultVoice.onended = () => { isVoicePlaying = false; };
+            } else {
+                isVoicePlaying = false;
+            }
         }
-
+    
         assets.currentUltCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
         setCurrentState(gameState.ULT_CUTIN);
     }
@@ -352,18 +363,20 @@ class Player {
         if (this.hitTimer === 0) {
             this.health -= amount;
             this.hitTimer = 60; // 1秒間無敵
-
-            isVoicePlaying = true;
-            pngtuberState = 'damage_hold';
-            const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
-            if (damageVoice) {
-                damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 7);
-                damageVoice.play();
-                damageVoice.onended = () => { isVoicePlaying = false; };
-            } else {
-                isVoicePlaying = false; // In case there are no voices
+    
+            if (!isVoiceMuted) {
+                isVoicePlaying = true;
+                pngtuberState = 'damage_hold';
+                const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
+                if (damageVoice) {
+                    damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
+                    damageVoice.play();
+                    damageVoice.onended = () => { isVoicePlaying = false; };
+                } else {
+                    isVoicePlaying = false;
+                }
             }
-
+    
             if (this.health <= 0) {
                 setCurrentState(gameState.GAMEOVER_BLACKOUT);
             }
@@ -648,7 +661,7 @@ function spawnEnemy() {
 
 function spawnBoss() {
     boss = new Boss();
-    playRandomBgm();
+    playRandomBossBgm();
 }
 
 // --- アセット読み込み ---
@@ -695,13 +708,12 @@ function loadAudio(src) {
 
 async function loadAssets() {
     const imageTypes = ['player', 'enemies', 'bosses', 'backgrounds', 'cutins'];
-    const audioTypes = ['bgm'];
     const promises = [];
 
     // Calculate total assets to load
     assetsToLoad = 0;
     imageTypes.forEach(type => assetsToLoad += assetPaths[type].length);
-    audioTypes.forEach(type => assetsToLoad += assetPaths[type].length);
+    Object.values(assetPaths.bgm).forEach(list => assetsToLoad += list.length);
     Object.keys(assetPaths.pngtuber).forEach(() => assetsToLoad++);
     Object.keys(assetPaths.voices).forEach(type => assetsToLoad += assetPaths.voices[type].length);
 
@@ -717,10 +729,10 @@ async function loadAssets() {
         promises.push(loadImage(assetPaths.pngtuber[key]).then(img => assets.pngtuber[key] = img));
     }
 
-    // Load audio
-    for (const type of audioTypes) {
-        for (const path of assetPaths[type]) {
-            promises.push(loadAudio(path).then(audio => assets[type].push(audio)));
+    // Load BGM audio
+    for (const type in assetPaths.bgm) { // 'normal', 'boss'
+        for (const path of assetPaths.bgm[type]) {
+            promises.push(loadAudio(path).then(audio => assets.bgm[type].push(audio)));
         }
     }
 
@@ -833,16 +845,17 @@ function isColliding(rect1, rect2) {
 // --- PNGTuber更新ロジック ---
 function updatePngtuber() {
     blinkTimer++;
+    let currentPngtuberImage;
 
     switch (pngtuberState) {
         case 'damage_hold':
-            pngtuberImage = assets.pngtuber.dd;
+            currentPngtuberImage = assets.pngtuber.dd;
             if (player.hitTimer === 0 && !isVoicePlaying) {
                 pngtuberState = 'normal';
             }
             break;
         case 'ult_hold':
-            pngtuberImage = assets.pngtuber.oo;
+            currentPngtuberImage = assets.pngtuber.oo;
             if (!isVoicePlaying) {
                 pngtuberState = 'normal';
             }
@@ -851,14 +864,17 @@ function updatePngtuber() {
         default:
             // 通常時は瞬き
             if (blinkTimer > 180) { // 3秒ごとに瞬き
-                pngtuberImage = assets.pngtuber.cc;
+                currentPngtuberImage = assets.pngtuber.cc;
                 if (blinkTimer > 188) { // 8フレーム(0.13秒)閉じ続ける
                     blinkTimer = 0;
                 }
             } else {
-                pngtuberImage = assets.pngtuber.oc;
+                currentPngtuberImage = assets.pngtuber.oc;
             }
             break;
+    }
+    if (currentPngtuberImage && pngtuberContainer) {
+        pngtuberContainer.style.backgroundImage = `url(${currentPngtuberImage.src})`;
     }
 }
 
@@ -894,6 +910,7 @@ function update() {
         if (boss) boss.update();
         enemyBullets.forEach(b => b.update());
         updatePngtuber();
+        updateUI();
 
         checkCollisions();
     } else if (currentState === gameState.ULT_CUTIN) {
@@ -998,44 +1015,24 @@ function drawImageWithAspectRatio(img, x, y, width, height) {
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 }
 
-function drawUI() {
-    const tuberSize = 300;
-    const padding = 10;
-    const tuberY = padding;
+function updateUI() {
+    if (!player) return;
 
-    // PNGTuberの描画
-    if (pngtuberImage) {
-        ctx.drawImage(pngtuberImage, padding, tuberY, tuberSize, tuberSize);
+    if (scoreEl) {
+        scoreEl.textContent = `Score: ${score}`;
     }
-
-    const textX = tuberSize + padding * 2;
-    const textY = tuberY + 30; 
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '24px "MS Gothic"';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-
-    // スコア、ライフ
-    ctx.fillText(`Score: ${score}`, textX, textY);
-    ctx.fillText(`Life: ${player.health}`, textX, textY + 30);
-
-    // ULTゲージ
-    const ultBarY = textY + 65;
-    const ultBarWidth = 200;
-    const ultBarHeight = 20;
-    ctx.fillStyle = '#555';
-    ctx.fillRect(textX, ultBarY, ultBarWidth, ultBarHeight);
-    ctx.fillStyle = ultReady ? '#00ff00' : '#ffff00';
-    ctx.fillRect(textX, ultBarY, (ultGauge / ultGaugeMax) * ultBarWidth, ultBarHeight);
-    ctx.strokeStyle = '#fff';
-    ctx.strokeRect(textX, ultBarY, ultBarWidth, ultBarHeight);
-    
-    ctx.fillStyle = '#000';
-    ctx.font = '16px "MS Gothic"';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(ultReady ? 'ULT READY!' : 'CHARGING...', textX + ultBarWidth / 2, ultBarY + ultBarHeight / 2);
+    if (lifeEl) {
+        lifeEl.textContent = `Life: ${player.health}`;
+    }
+    if (ultGaugeBarEl) {
+        const ultPercent = (ultGauge / ultGaugeMax) * 100;
+        ultGaugeBarEl.style.width = `${ultPercent}%`;
+        if (ultReady) {
+            ultGaugeBarEl.style.backgroundColor = '#00ff00';
+        } else {
+            ultGaugeBarEl.style.backgroundColor = '#ff00ff';
+        }
+    }
 }
 
 function drawControls(yOffset) {
@@ -1094,8 +1091,6 @@ function drawGameScreen() {
     enemies.forEach(e => e.draw());
     if (boss) boss.draw();
     enemyBullets.forEach(b => b.draw());
-
-    drawUI();
 }
 
 function drawPausedScreen() {
@@ -1182,6 +1177,8 @@ function setCurrentState(newState) {
     currentState = newState;
     transitionTimer = 0; // 状態が変わる際にタイマーをリセット
 
+    const gameUiContainer = document.getElementById('gameUiContainer');
+
     // モバイルでのみ、ゲームの状態に応じて一時停止ボタンの表示を切り替える
     if (isMobile) {
         if (newState === gameState.PLAYING) {
@@ -1191,17 +1188,30 @@ function setCurrentState(newState) {
         }
     }
 
+    if (gameUiContainer) {
+        if (newState === gameState.PLAYING) {
+            gameUiContainer.style.display = 'flex';
+        } else if (newState === gameState.TITLE || newState === gameState.GAMEOVER || newState === gameState.CLEAR) {
+            gameUiContainer.style.display = 'none';
+        }
+    }
+
     switch (newState) {
         case gameState.TITLE:
             assets.currentTitleCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
-            playRandomBgm();
+            playRandomNormalBgm();
             break;
         case gameState.GAMEOVER:
             assets.currentGameoverCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             stopAllBgm();
+            const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
+            if (damageVoice && !isVoiceMuted && audioControls.volumeSlider.value > 0) {
+                damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
+                damageVoice.play();
+            }
             break;
         case gameState.CLEAR:
-            playRandomBgm();
+            playRandomNormalBgm();
             canvas.style.display = 'none';
             audioControlsContainer.style.display = 'none';
             const randomCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
@@ -1267,12 +1277,21 @@ function handleKeyDown(e) {
 }
 
 // --- BGMコントロール ---
-function playRandomBgm() {
-    if (assets.bgm.length === 0) return;
+function playRandomNormalBgm() {
+    if (assets.bgm.normal.length === 0) return;
     let newBgm;
     do {
-        newBgm = assets.bgm[Math.floor(Math.random() * assets.bgm.length)];
-    } while (assets.bgm.length > 1 && newBgm === assets.currentBgm);
+        newBgm = assets.bgm.normal[Math.floor(Math.random() * assets.bgm.normal.length)];
+    } while (assets.bgm.normal.length > 1 && newBgm === assets.currentBgm);
+    playBgm(newBgm);
+}
+
+function playRandomBossBgm() {
+    if (assets.bgm.boss.length === 0) return;
+    let newBgm;
+    do {
+        newBgm = assets.bgm.boss[Math.floor(Math.random() * assets.bgm.boss.length)];
+    } while (assets.bgm.boss.length > 1 && newBgm === assets.currentBgm);
     playBgm(newBgm);
 }
 
@@ -1286,19 +1305,30 @@ function playBgm(bgm) {
 }
 
 function stopAllBgm() {
-    assets.bgm.forEach(bgm => {
+    Object.values(assets.bgm).flat().forEach(bgm => {
         bgm.pause();
         bgm.currentTime = 0;
     });
+    if (assets.currentBgm) {
+        assets.currentBgm.pause();
+        assets.currentBgm.currentTime = 0;
+        assets.currentBgm = null;
+    }
 }
 
 function setVolume(volume) {
-    const audioElements = [...assets.bgm, endingVideo];
+    const audioElements = [...Object.values(assets.bgm).flat(), endingVideo];
     audioElements.forEach(audio => {
         if(audio) audio.volume = volume;
     });
 
-    // Voice volume is handled separately when played
+    if (voiceMuteButton) {
+        voiceMuteButton.disabled = volume == 0;
+        if (volume == 0) {
+            isVoiceMuted = true;
+            voiceMuteButton.textContent = 'VoiceMute';
+        }
+    }
 
     if (volume > 0) {
         audioControls.muteButton.textContent = 'Mute';
@@ -1310,8 +1340,8 @@ function setVolume(volume) {
 function toggleMute() {
     const isMuted = audioControls.volumeSlider.value == 0;
     if (isMuted) {
-        setVolume(0.5); // ミュート解除時のデフォルト音量
-        audioControls.volumeSlider.value = 0.5;
+        setVolume(0.1); // ミュート解除時のデフォルト音量
+        audioControls.volumeSlider.value = 0.1;
     } else {
         setVolume(0);
         audioControls.volumeSlider.value = 0;
@@ -1322,7 +1352,7 @@ function toggleMute() {
 function handleCanvasClick(clickX, clickY) {
     if (currentState === gameState.TITLE) {
         initGame();
-        playRandomBgm();
+        playRandomNormalBgm();
         setCurrentState(gameState.PLAYING);
     } else if (currentState === gameState.GAMEOVER) {
         setCurrentState(gameState.TITLE);
@@ -1407,6 +1437,10 @@ window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 audioControls.muteButton.addEventListener('click', toggleMute);
 audioControls.volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+voiceMuteButton.addEventListener('click', () => {
+    isVoiceMuted = !isVoiceMuted;
+    voiceMuteButton.textContent = isVoiceMuted ? 'VoiceUnmute' : 'VoiceMute';
+});
 
 function checkOrientation() {
     if (!isMobile) return;
