@@ -19,6 +19,7 @@ const gameUiContainer = document.getElementById('gameUiContainer');
 const voiceMuteButton = document.getElementById('voiceMuteButton');
 
 let isVoiceMuted = false;
+let lastVolume = 0.2;
 
 if (reloadButton) {
     reloadButton.addEventListener('click', () => location.reload());
@@ -1204,6 +1205,7 @@ function setCurrentState(newState) {
         case gameState.GAMEOVER:
             assets.currentGameoverCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             stopAllBgm();
+            playRandomBossBgm();
             const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
             if (damageVoice && !isVoiceMuted && audioControls.volumeSlider.value > 0) {
                 damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
@@ -1317,17 +1319,14 @@ function stopAllBgm() {
 }
 
 function setVolume(volume) {
-    const audioElements = [...Object.values(assets.bgm).flat(), endingVideo];
-    audioElements.forEach(audio => {
-        if(audio) audio.volume = volume;
+    const bgmVolume = Math.min(1, volume * 2.5);
+    Object.values(assets.bgm).flat().forEach(audio => {
+        if(audio) audio.volume = bgmVolume;
     });
+    if(endingVideo) endingVideo.volume = volume;
 
     if (voiceMuteButton) {
         voiceMuteButton.disabled = volume == 0;
-        if (volume == 0) {
-            isVoiceMuted = true;
-            voiceMuteButton.textContent = 'VoiceMute';
-        }
     }
 
     if (volume > 0) {
@@ -1335,14 +1334,16 @@ function setVolume(volume) {
     } else {
         audioControls.muteButton.textContent = 'Unmute';
     }
+    lastVolume = volume;
 }
 
 function toggleMute() {
     const isMuted = audioControls.volumeSlider.value == 0;
     if (isMuted) {
-        setVolume(0.1); // ミュート解除時のデフォルト音量
-        audioControls.volumeSlider.value = 0.1;
+        setVolume(lastVolume);
+        audioControls.volumeSlider.value = lastVolume;
     } else {
+        lastVolume = audioControls.volumeSlider.value;
         setVolume(0);
         audioControls.volumeSlider.value = 0;
     }
