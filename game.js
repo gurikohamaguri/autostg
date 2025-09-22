@@ -134,10 +134,10 @@ const assetPaths = {
     },
     voices: {
         damage: [
-            'assets/voice/d1.mp3', 'assets/voice/d11.mp3', 'assets/voice/d2-3.mp3', 'assets/voice/d21.mp3', 'assets/voice/d22.mp3'
+            'assets/voice/d101.mp3', 'assets/voice/d11.mp3', 'assets/voice/d2-401.mp3', 'assets/voice/d21.mp3', 'assets/voice/d22.mp3'
         ],
         ult: [
-            'assets/voice/u12-1.mp3', 'assets/voice/u13.mp3', 'assets/voice/u14.mp3', 'assets/voice/u15.mp3', 'assets/voice/u2-2.mp3', 'assets/voice/u21.mp3', 'assets/voice/u22.mp3', 'assets/voice/u23.mp3', 'assets/voice/u3-1.mp3', 'assets/voice/u41.mp3', 'assets/voice/u51.mp3', 'assets/voice/u61.mp3', 'assets/voice/u7-1.mp3', 'assets/voice/u71.mp3', 'assets/voice/u81.mp3', 'assets/voice/u9-1.mp3', 'assets/voice/u91.mp3', 'assets/voice/u92.mp3'
+            'assets/voice/u12-101.mp3', 'assets/voice/u13.mp3', 'assets/voice/u1401.mp3', 'assets/voice/u2-201.mp3', 'assets/voice/u21.mp3', 'assets/voice/u3-101.mp3', 'assets/voice/u41 01.mp3', 'assets/voice/u5101.mp3', 'assets/voice/u6101.mp3', 'assets/voice/u7-101.mp3', 'assets/voice/u7101.mp3', 'assets/voice/u8101.mp3', 'assets/voice/u9-101.mp3', 'assets/voice/u91.mp3', 'assets/voice/u9101.mp3', 'assets/voice/u9201.mp3'
         ],
     }
 };
