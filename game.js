@@ -192,6 +192,11 @@ const ultGaugeMax = 600; // 10秒 * 60fps
 let ultReady = false;
 let assetsLoaded = 0;
 let assetsToLoad = 0;
+let ultUsageCount = 0;
+let bossEnrageTimer = -1;
+let isBossEnraged = false;
+let bossEnragePenaltyTimer = -1;
+let purpleFlashTimer = 0;
 
 // --- 入力管理 ---
 const keys = {};
@@ -276,6 +281,7 @@ class Player {
         this.shootCooldown = 0;
         this.health = 10;
         this.hitTimer = 0;
+        this.damageColor = null;
     }
 
     update() {
@@ -326,8 +332,14 @@ class Player {
 
     draw() {
         if (this.hitTimer > 0 && Math.floor(this.hitTimer / 4) % 2 === 0) {
-            // 点滅処理
+            // 点滅で消えるフレーム
+            if (this.damageColor === 'purple') {
+                ctx.fillStyle = 'rgba(128, 0, 128, 0.8)';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+            // 白点滅の場合は何もしない（透明になる）
         } else {
+            // 表示されるフレーム
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         }
         this.bullets.forEach(bullet => bullet.draw());
@@ -341,6 +353,7 @@ class Player {
 
     useUlt() {
         if (!ultReady) return;
+        ultUsageCount++; // ULT使用回数をカウント
         ultReady = false;
         ultGauge = 0;
     
@@ -349,7 +362,7 @@ class Player {
             pngtuberState = 'ult_hold';
             const ultVoice = assets.voices.ult[Math.floor(Math.random() * assets.voices.ult.length)];
             if (ultVoice) {
-                ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3.75);
+                ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 2.5);
                 ultVoice.play();
                 ultVoice.onended = () => { isVoicePlaying = false; };
             } else {
@@ -361,17 +374,18 @@ class Player {
         setCurrentState(gameState.ULT_CUTIN);
     }
     
-    takeDamage(amount) {
+    takeDamage(amount, color = 'white') {
         if (this.hitTimer === 0) {
             this.health -= amount;
             this.hitTimer = 60; // 1秒間無敵
+            this.damageColor = color;
     
             if (!isVoiceMuted) {
                 isVoicePlaying = true;
                 pngtuberState = 'damage_hold';
                 const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
                 if (damageVoice) {
-                    damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3.75);
+                    damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 2.5);
                     damageVoice.play();
                     damageVoice.onended = () => { isVoicePlaying = false; };
                 } else {
@@ -437,30 +451,32 @@ class Enemy {
             this.hitTimer--;
         }
 
+        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+
         // 移動ロジック
         switch (this.moveType) {
             case 'homing':
                 if (player) {
                     const dy = player.y - this.y;
-                    this.y += Math.sign(dy) * Math.min(Math.abs(dy), Math.abs(this.speedX));
+                    this.y += Math.sign(dy) * Math.min(Math.abs(dy), Math.abs(this.speedX * speedMultiplier));
                 }
-                this.x += this.speedX;
+                this.x += this.speedX * speedMultiplier;
                 break;
             case 'zigzag':
-                this.y += this.speedY;
+                this.y += this.speedY * speedMultiplier;
                 if (this.y < this.initialY - this.amplitude || this.y > this.initialY + this.amplitude) {
                     this.speedY *= -1;
                 }
-                this.x += this.speedX;
+                this.x += this.speedX * speedMultiplier;
                 break;
             case 'circle':
-                this.angle += this.angleSpeed;
+                this.angle += this.angleSpeed * speedMultiplier;
                 this.y = this.centerY + Math.sin(this.angle) * this.radius;
-                this.x += this.speedX;
+                this.x += this.speedX * speedMultiplier;
                 break;
             case 'straight':
             default:
-                this.x += this.speedX;
+                this.x += this.speedX * speedMultiplier;
                 break;
         }
 
@@ -472,7 +488,7 @@ class Enemy {
         this.shootCooldown--;
         if (this.shootCooldown <= 0) {
             this.shoot();
-            this.shootCooldown = Math.random() * 100 + 100;
+            this.shootCooldown = (Math.random() * 100 + 100) / speedMultiplier;
         }
     }
 
@@ -487,32 +503,38 @@ class Enemy {
     shoot() {
         if (this.bulletType === 'none' || !player) return;
 
+        const speedMultiplier = isBossEnraged ? 1.5 : 1;
         const bulletX = this.x;
         const bulletY = this.y + this.height / 2;
 
         switch (this.bulletType) {
             case 'single':
-                enemyBullets.push(new Bullet(bulletX, bulletY, -5, 0, '#ff6666'));
+                enemyBullets.push(new Bullet(bulletX, bulletY, -5 * speedMultiplier, 0, '#ff6666'));
                 break;
             case 'triple':
-                enemyBullets.push(new Bullet(bulletX, bulletY, -5, -1, '#ff6666'));
-                enemyBullets.push(new Bullet(bulletX, bulletY, -5, 0, '#ff6666'));
-                enemyBullets.push(new Bullet(bulletX, bulletY, -5, 1, '#ff6666'));
+                enemyBullets.push(new Bullet(bulletX, bulletY, -5 * speedMultiplier, -1 * speedMultiplier, '#ff6666'));
+                enemyBullets.push(new Bullet(bulletX, bulletY, -5 * speedMultiplier, 0, '#ff6666'));
+                enemyBullets.push(new Bullet(bulletX, bulletY, -5 * speedMultiplier, 1 * speedMultiplier, '#ff6666'));
+                if (isBossEnraged) {
+                    enemyBullets.push(new Bullet(bulletX, bulletY, -5 * speedMultiplier, -2 * speedMultiplier, '#ff6666'));
+                    enemyBullets.push(new Bullet(bulletX, bulletY, -5 * speedMultiplier, 2 * speedMultiplier, '#ff6666'));
+                }
                 break;
             case 'homing':
                 const dx = player.x - this.x;
                 const dy = player.y - this.y;
                 const angle = Math.atan2(dy, dx);
-                const speed = 4;
+                const speed = 4 * speedMultiplier;
                 enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * speed, Math.sin(angle) * speed, '#ff4444'));
                 break;
             case 'beam':
-                enemyBullets.push(new Bullet(bulletX, bulletY - 10, -8, 0, '#ff0000', 50, 20));
+                enemyBullets.push(new Bullet(bulletX, bulletY - 10, -8 * speedMultiplier, 0, '#ff0000', 50, 20));
                 break;
             case 'radial':
-                for (let i = 0; i < 6; i++) {
-                    const angle = (i / 6) * Math.PI * 2;
-                    enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * 3, Math.sin(angle) * 3, '#ff8888'));
+                const bulletCount = isBossEnraged ? 9 : 6;
+                for (let i = 0; i < bulletCount; i++) {
+                    const angle = (i / bulletCount) * Math.PI * 2;
+                    enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * 3 * speedMultiplier, Math.sin(angle) * 3 * speedMultiplier, '#ff8888'));
                 }
                 break;
         }
@@ -550,19 +572,21 @@ class Boss {
             this.hitTimer--;
         }
 
+        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+
         // 初期位置まで移動
         if (this.x > canvas.width - this.width - 50) {
-            this.x += this.speedX;
+            this.x += this.speedX * speedMultiplier;
         } else {
             // 上下に移動
-            this.y += this.speedY;
+            this.y += this.speedY * speedMultiplier;
             if (this.y < 0 || this.y > canvas.height - this.height) {
                 this.speedY *= -1;
             }
         }
 
         this.attackPhaseTimer++;
-        if (this.attackPhaseTimer > 300) { // 5秒ごとにフェーズ変更
+        if (this.attackPhaseTimer > 300 / speedMultiplier) { // 5秒ごとにフェーズ変更
             this.attackPhase = (this.attackPhase + 1) % 4;
             this.attackPhaseTimer = 0;
         }
@@ -576,12 +600,13 @@ class Boss {
     }
 
     setShootCooldown() {
+        const speedMultiplier = isBossEnraged ? 1.5 : 1;
         switch (this.attackPhase) {
-            case 0: this.shootCooldown = 90; break; // Radial
-            case 1: this.shootCooldown = 120; break; // Wide
-            case 2: this.shootCooldown = 30; break;  // 3-way
-            case 3: this.shootCooldown = 60; break; // Homing
-            default: this.shootCooldown = 90;
+            case 0: this.shootCooldown = 90 / speedMultiplier; break; // Radial
+            case 1: this.shootCooldown = 120 / speedMultiplier; break; // Wide
+            case 2: this.shootCooldown = 30 / speedMultiplier; break;  // 3-way
+            case 3: this.shootCooldown = 60 / speedMultiplier; break; // Homing
+            default: this.shootCooldown = 90 / speedMultiplier;
         }
     }
 
@@ -605,19 +630,22 @@ class Boss {
     }
 
     shoot() {
+        const speedMultiplier = isBossEnraged ? 1.5 : 1;
         const bulletX = this.x + this.width / 2;
         const bulletY = this.y + this.height / 2;
 
         switch (this.attackPhase) {
             case 0: // 放射弾 (Radial)
-                for (let i = 0; i < 16; i++) {
-                    const angle = (i / 16) * Math.PI * 2 + (this.attackPhaseTimer / 100);
-                    enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * 4, Math.sin(angle) * 4, '#ff00ff', 10, 10));
+                const radialCount = isBossEnraged ? 24 : 16;
+                for (let i = 0; i < radialCount; i++) {
+                    const angle = (i / radialCount) * Math.PI * 2 + (this.attackPhaseTimer / 100);
+                    enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * 4 * speedMultiplier, Math.sin(angle) * 4 * speedMultiplier, '#ff00ff', 10, 10));
                 }
                 break;
             case 1: // 幅広直線 (Wide Straight)
-                for (let i = -3; i <= 3; i++) {
-                    enemyBullets.push(new Bullet(this.x, this.y + this.height/2 + i * 20, -7, 0, '#ff99ff', 15, 15));
+                const wideCount = isBossEnraged ? 5 : 3;
+                for (let i = -wideCount; i <= wideCount; i++) {
+                    enemyBullets.push(new Bullet(this.x, this.y + this.height/2 + i * 20, -7 * speedMultiplier, 0, '#ff99ff', 15, 15));
                 }
                 break;
             case 2: // 3方向弾 (3-way)
@@ -625,9 +653,10 @@ class Boss {
                     const dx = player.x - this.x;
                     const dy = player.y - this.y;
                     const angleToPlayer = Math.atan2(dy, dx);
-                    for (let i = -1; i <= 1; i++) {
+                    const threeWayCount = isBossEnraged ? 3 : 1;
+                    for (let i = -threeWayCount; i <= threeWayCount; i++) {
                         const angle = angleToPlayer + i * (Math.PI / 10); // 18度ずつ
-                        enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * 6, Math.sin(angle) * 6, '#cc00cc', 12, 12));
+                        enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * 6 * speedMultiplier, Math.sin(angle) * 6 * speedMultiplier, '#cc00cc', 12, 12));
                     }
                 }
                 break;
@@ -636,11 +665,17 @@ class Boss {
                     const dx = player.x - this.x;
                     const dy = player.y - this.y;
                     const angle = Math.atan2(dy, dx);
-                    const speed = 3;
+                    const speed = 3 * speedMultiplier;
                     const homingBullet = new Bullet(bulletX, bulletY, Math.cos(angle) * speed, Math.sin(angle) * speed, '#ff44cc', 15, 15);
                     homingBullet.homing = true;
                     homingBullet.homingTimer = 180; // 3秒間追尾
                     enemyBullets.push(homingBullet);
+                    if (isBossEnraged) {
+                        const homingBullet2 = new Bullet(bulletX, bulletY, Math.cos(angle + Math.PI) * speed, Math.sin(angle + Math.PI) * speed, '#ff44cc', 15, 15);
+                        homingBullet2.homing = true;
+                        homingBullet2.homingTimer = 180; // 3秒間追尾
+                        enemyBullets.push(homingBullet2);
+                    }
                 }
                 break;
         }
@@ -664,6 +699,21 @@ function spawnEnemy() {
 function spawnBoss() {
     boss = new Boss();
     playRandomBossBgm();
+    bossEnrageTimer = 60 * 60; // 60秒
+    isBossEnraged = false;
+    bossEnragePenaltyTimer = -1;
+}
+
+function enrageBoss() {
+    isBossEnraged = true;
+    purpleFlashTimer = 30; // 0.5秒のフラッシュ
+    playRandomBossBgm();
+    let newBg;
+    do {
+        newBg = assets.backgrounds[Math.floor(Math.random() * assets.backgrounds.length)];
+    } while (newBg === gameBackground && assets.backgrounds.length > 1);
+    gameBackground = newBg;
+    bossEnragePenaltyTimer = 10 * 60; // 10秒
 }
 
 // --- アセット読み込み ---
@@ -773,11 +823,16 @@ function initGame() {
     score = 0;
     ultGauge = 0;
     ultReady = false;
+    ultUsageCount = 0; // ULT使用回数をリセット
     gameBackground = assets.backgrounds[Math.floor(Math.random() * assets.backgrounds.length)];
     backgroundX = 0;
     pngtuberState = 'normal';
     blinkTimer = 0;
     isVoicePlaying = false;
+    bossEnrageTimer = -1;
+    isBossEnraged = false;
+    bossEnragePenaltyTimer = -1;
+    purpleFlashTimer = 0;
 }
 
 // --- 当たり判定 ---
@@ -844,6 +899,14 @@ function isColliding(rect1, rect2) {
     );
 }
 
+function calculateFinalScore() {
+    if (!player) return { finalScore: score, lifeBonus: 0, ultPenalty: 0, baseScore: score };
+    const lifeBonus = player.health * 1000;
+    const ultPenalty = ultUsageCount * 500;
+    const finalScore = score + lifeBonus - ultPenalty;
+    return { finalScore, lifeBonus, ultPenalty, baseScore: score };
+}
+
 // --- PNGTuber更新ロジック ---
 function updatePngtuber() {
     blinkTimer++;
@@ -889,6 +952,26 @@ function update() {
             backgroundX = 0;
         }
 
+        if (bossEnrageTimer > 0) {
+            bossEnrageTimer--;
+            if (bossEnrageTimer === 0) {
+                enrageBoss();
+            }
+        }
+
+        if (bossEnragePenaltyTimer > 0) {
+            bossEnragePenaltyTimer--;
+            if (bossEnragePenaltyTimer === 0) {
+                player.takeDamage(1);
+                purpleFlashTimer = 30;
+                bossEnragePenaltyTimer = 10 * 60; // Reset timer
+            }
+        }
+
+        if (purpleFlashTimer > 0) {
+            purpleFlashTimer--;
+        }
+
         if (!ultReady) {
             ultGauge++;
             if (ultGauge >= ultGaugeMax) {
@@ -903,7 +986,7 @@ function update() {
 
         // 雑魚敵のスポーンは常に継続
         enemySpawnTimer++;
-        if (enemySpawnTimer % 120 === 0) {
+        if (enemySpawnTimer % (isBossEnraged ? 80 : 120) === 0) {
             spawnEnemy();
         }
         
@@ -996,6 +1079,11 @@ function draw() {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             break;
     }
+
+    if (purpleFlashTimer > 0) {
+        ctx.fillStyle = `rgba(128, 0, 128, ${0.5 * (purpleFlashTimer / 30)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 // --- 各画面の描画 ---
@@ -1068,7 +1156,8 @@ function drawLoadingScreen() {
 function drawTitleScreen() {
     if (assets.currentTitleCutin) {
         drawImageWithAspectRatio(assets.currentTitleCutin, 0, 0, canvas.width, canvas.height);
-    } else {
+    }
+    else {
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
@@ -1093,6 +1182,21 @@ function drawGameScreen() {
     enemies.forEach(e => e.draw());
     if (boss) boss.draw();
     enemyBullets.forEach(b => b.draw());
+
+    // Draw timers
+    ctx.font = '30px "MS Gothic"';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const hpBarRightX = canvas.width / 2 + 200;
+    const timerY = 30;
+
+    if (bossEnrageTimer > 0) {
+        ctx.fillStyle = 'white';
+        ctx.fillText(`CountDown: ${Math.ceil(bossEnrageTimer / 60)}`, hpBarRightX + 20, timerY);
+    } else if (isBossEnraged && bossEnragePenaltyTimer > 0) {
+        ctx.fillStyle = 'magenta';
+        ctx.fillText(`Penalty: ${Math.ceil(bossEnragePenaltyTimer / 60)}`, hpBarRightX + 20, timerY);
+    }
 }
 
 function drawPausedScreen() {
@@ -1149,11 +1253,18 @@ function drawGameoverScreen() {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 70px "Meiryo"';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 50);
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 100);
+
+    const scores = calculateFinalScore();
     ctx.font = '30px "Meiryo"';
-    ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+    ctx.fillText(`Score: ${scores.baseScore}`, canvas.width / 2, canvas.height / 2 - 20);
+    ctx.fillText(`Life Bonus: +${scores.lifeBonus}`, canvas.width / 2, canvas.height / 2 + 20);
+    ctx.fillText(`ULT Penalty: -${scores.ultPenalty}`, canvas.width / 2, canvas.height / 2 + 60);
+    ctx.font = 'bold 40px "Meiryo"';
+    ctx.fillText(`Final Score: ${scores.finalScore}`, canvas.width / 2, canvas.height / 2 + 110);
+
     ctx.font = '24px "Meiryo"';
-    ctx.fillText(isMobile ? 'Tap to Restart' : 'Click to Restart', canvas.width / 2, canvas.height / 2 + 80);
+    ctx.fillText(isMobile ? 'Tap to Restart' : 'Click to Restart', canvas.width / 2, canvas.height / 2 + 160);
 }
 
 function drawUltCutinScreen() {
@@ -1231,7 +1342,7 @@ function setCurrentState(newState) {
             audioControlsContainer.style.display = 'none';
             const randomCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             clearScreen.style.backgroundImage = `url(${randomCutin.src})`;
-            finalScoreEl.textContent = `Final Score: ${score}`;
+            finalScoreEl.textContent = `Final Score: ${calculateFinalScore()}`;
             clearScreen.style.display = 'flex';
             break;
     }
