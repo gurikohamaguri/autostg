@@ -1342,7 +1342,11 @@ function setCurrentState(newState) {
             audioControlsContainer.style.display = 'none';
             const randomCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             clearScreen.style.backgroundImage = `url(${randomCutin.src})`;
-            finalScoreEl.textContent = `Final Score: ${calculateFinalScore()}`;
+            const scores = calculateFinalScore();
+            document.getElementById('baseScore').textContent = `Score: ${scores.baseScore}`;
+            document.getElementById('lifeBonus').textContent = `Life Bonus: +${scores.lifeBonus}`;
+            document.getElementById('ultPenalty').textContent = `ULT Penalty: -${scores.ultPenalty}`;
+            document.getElementById('finalScore').textContent = `Final Score: ${scores.finalScore}`;
             clearScreen.style.display = 'flex';
             break;
     }
