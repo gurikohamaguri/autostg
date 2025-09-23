@@ -20,6 +20,7 @@ const voiceMuteButton = document.getElementById('voiceMuteButton');
 
 let isVoiceMuted = false;
 let lastVolume = 0.2;
+let isMutedByPause = false;
 
 if (reloadButton) {
     reloadButton.addEventListener('click', () => location.reload());
@@ -135,7 +136,7 @@ const assetPaths = {
     },
     voices: {
         damage: [
-            'assets/voice/d101.mp3', 'assets/voice/d11.mp3', 'assets/voice/d2-401.mp3', 'assets/voice/d21.mp3', 'assets/voice/d22.mp3'
+            'assets/voice/d101.mp3', 'assets/voice/d1101.mp3', 'assets/voice/d2-401.mp3', 'assets/voice/d21.mp3', 'assets/voice/d22.mp3'
         ],
         ult: [
             'assets/voice/u12-101.mp3', 'assets/voice/u13.mp3', 'assets/voice/u1401.mp3', 'assets/voice/u2-201.mp3', 'assets/voice/u21.mp3', 'assets/voice/u3-101.mp3', 'assets/voice/u41 01.mp3', 'assets/voice/u5101.mp3', 'assets/voice/u6101.mp3', 'assets/voice/u7-101.mp3', 'assets/voice/u7101.mp3', 'assets/voice/u8101.mp3', 'assets/voice/u9-101.mp3', 'assets/voice/u91.mp3', 'assets/voice/u9101.mp3', 'assets/voice/u9201.mp3'
@@ -348,7 +349,7 @@ class Player {
             pngtuberState = 'ult_hold';
             const ultVoice = assets.voices.ult[Math.floor(Math.random() * assets.voices.ult.length)];
             if (ultVoice) {
-                ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
+                ultVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3.75);
                 ultVoice.play();
                 ultVoice.onended = () => { isVoicePlaying = false; };
             } else {
@@ -370,7 +371,7 @@ class Player {
                 pngtuberState = 'damage_hold';
                 const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
                 if (damageVoice) {
-                    damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
+                    damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3.75);
                     damageVoice.play();
                     damageVoice.onended = () => { isVoicePlaying = false; };
                 } else {
@@ -1175,8 +1176,25 @@ function handleSkip(e) {
 }
 
 function setCurrentState(newState) {
+    const previousState = currentState;
     currentState = newState;
     transitionTimer = 0; // 状態が変わる際にタイマーをリセット
+
+    // Pause/Resume Mute Logic
+    if (newState === gameState.PAUSED) {
+        if (audioControls.volumeSlider.value > 0) {
+            isMutedByPause = true;
+            lastVolume = audioControls.volumeSlider.value;
+            setVolume(0);
+            audioControls.volumeSlider.value = 0;
+        }
+    } else if (previousState === gameState.PAUSED && newState === gameState.PLAYING) {
+        if (isMutedByPause) {
+            setVolume(lastVolume);
+            audioControls.volumeSlider.value = lastVolume;
+            isMutedByPause = false;
+        }
+    }
 
     const gameUiContainer = document.getElementById('gameUiContainer');
 
@@ -1206,11 +1224,6 @@ function setCurrentState(newState) {
             assets.currentGameoverCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             stopAllBgm();
             playRandomBossBgm();
-            const damageVoice = assets.voices.damage[Math.floor(Math.random() * assets.voices.damage.length)];
-            if (damageVoice && !isVoiceMuted && audioControls.volumeSlider.value > 0) {
-                damageVoice.volume = Math.min(1, audioControls.volumeSlider.value * 3);
-                damageVoice.play();
-            }
             break;
         case gameState.CLEAR:
             playRandomNormalBgm();
@@ -1319,7 +1332,7 @@ function stopAllBgm() {
 }
 
 function setVolume(volume) {
-    const bgmVolume = Math.min(1, volume * 2.5);
+    const bgmVolume = Math.min(1, volume * 0.25);
     Object.values(assets.bgm).flat().forEach(audio => {
         if(audio) audio.volume = bgmVolume;
     });
@@ -1331,10 +1344,10 @@ function setVolume(volume) {
 
     if (volume > 0) {
         audioControls.muteButton.textContent = 'Mute';
+        lastVolume = volume;
     } else {
         audioControls.muteButton.textContent = 'Unmute';
     }
-    lastVolume = volume;
 }
 
 function toggleMute() {
