@@ -37,6 +37,12 @@ canvas.height = window.innerHeight;
 // --- スマホ・タッチ操作判定 ---
 const isMobile = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
 
+if (isMobile) {
+    const pngtuberSize = window.innerHeight * 0.15;
+    pngtuberContainer.style.height = `${pngtuberSize}px`;
+    pngtuberContainer.style.width = `${pngtuberSize}px`;
+}
+
 // --- オーディオコントロール ---
 const audioControlsContainer = document.getElementById('audioControls');
 const audioControls = {
