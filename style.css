@@ -13,35 +13,36 @@ canvas {
 #pauseButton {
     display: none; /* Hidden by default */
     position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
+    top: 2vh;
+    right: 2vh;
+    width: 8vmin;
+    height: 8vmin;
     background-color: rgba(0, 0, 0, 0.5);
-    border: 2px solid white;
+    border: 0.3vmin solid white;
     border-radius: 50%;
-    font-size: 24px;
+    font-size: 4vmin;
     color: white;
     cursor: pointer;
     z-index: 100;
-    line-height: 46px;
+    line-height: 8vmin;
     text-align: center;
 }
 
 #audioControls {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 1vh;
+    right: 1vw;
     background-color: rgba(0,0,0,0.5);
-    padding: 10px;
-    border-radius: 5px;
+    padding: 1vmin;
+    border-radius: 1vmin;
     display: flex;
     align-items: center;
     z-index: 20;
 }
 
 #audioControls button, #audioControls input {
-    margin-left: 10px;
+    margin-left: 1vmin;
+    font-size: 2vmin;
 }
 
 #voiceMuteButton:disabled {
@@ -81,28 +82,28 @@ canvas {
 
 #clearMenu {
     background-color: rgba(255, 255, 255, 0.8);
-    padding: 40px;
-    border-radius: 10px;
-    border: 2px solid #000;
+    padding: 4vmin;
+    border-radius: 1vmin;
+    border: 0.2vmin solid #000;
 }
 
 #clearMenu h1 {
-    font-size: 70px;
-    margin-bottom: 20px;
+    font-size: 7vmin;
+    margin-bottom: 2vmin;
     font-weight: bold;
 }
 
 #clearMenu p {
-    font-size: 30px;
-    margin-bottom: 40px;
+    font-size: 3vmin;
+    margin-bottom: 4vmin;
 }
 
 #clearMenu button {
-    font-size: 24px;
-    padding: 15px 30px;
-    margin: 0 15px;
-    border-radius: 5px;
-    border: 2px solid #000;
+    font-size: 2.5vmin;
+    padding: 1.5vmin 3vmin;
+    margin: 0 1.5vmin;
+    border-radius: 0.5vmin;
+    border: 0.2vmin solid #000;
     background-color: #ddd;
     color: #000;
     cursor: pointer;
@@ -117,15 +118,15 @@ canvas {
 #ultButton {
     display: none; /* PCでは非表示 */
     position: fixed;
-    right: 20px;
-    bottom: 20px;
-    width: 80px;
-    height: 80px;
+    right: 3vw;
+    bottom: 3vh;
+    width: 12vmin;
+    height: 12vmin;
     background-color: rgba(255, 223, 0, 0.7); /* ゴールドっぽい色 */
     color: black;
-    font-size: 24px;
+    font-size: 3vmin;
     font-weight: bold;
-    border: 3px solid #fff;
+    border: 0.5vmin solid #fff;
     border-radius: 50%;
     cursor: pointer;
     z-index: 100;
@@ -144,14 +145,9 @@ canvas {
     #audioControls {
         /* PCでは右上だが、スマホでは左下に移動 */
         top: auto;
-        bottom: 10px;
-        left: 10px;
+        bottom: 2vh;
+        left: 2vw;
         right: auto;
-    }
-
-    #pngtuberContainer {
-        width: 150px;
-        height: 150px;
     }
 }
 
@@ -169,27 +165,27 @@ canvas {
     justify-content: center;
     align-items: center;
     z-index: 200;
-    font-size: 30px;
+    font-size: 3vmin;
     font-family: "MS Gothic", sans-serif;
 }
 
 .loading-buttons {
     display: flex;
-    margin-top: 20px;
+    margin-top: 2vh;
 }
 
 #reloadButton, #exitButton {
-    padding: 10px 20px;
-    font-size: 20px;
+    padding: 1vmin 2vmin;
+    font-size: 2vmin;
     cursor: pointer;
     background-color: #333;
     color: #fff;
-    border: 2px solid #fff;
-    border-radius: 5px;
+    border: 0.2vmin solid #fff;
+    border-radius: 0.5vmin;
 }
 
 #exitButton {
-    margin-left: 15px;
+    margin-left: 1.5vw;
 }
 
 #progressBarContainer {
@@ -223,12 +219,12 @@ canvas {
     align-items: center;
     z-index: 9999;
     text-align: center;
-    font-size: 24px;
+    font-size: 3vmin;
 }
 
 .rotate-icon {
-    font-size: 80px;
-    margin-top: 20px;
+    font-size: 10vmin;
+    margin-top: 2vh;
     animation: spin-horizontal 2.5s ease-in-out infinite;
 }
 
@@ -241,8 +237,8 @@ canvas {
 
 #gameUiContainer {
     position: fixed;
-    bottom: 10px;
-    right: 10px;
+    bottom: 2vh;
+    right: 2vw;
     display: flex;
     align-items: flex-end;
     z-index: 10;
@@ -252,22 +248,22 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin-right: 10px;
+    margin-right: 1vw;
     color: white;
-    font-size: 20px;
-    text-shadow: 2px 2px 4px #000000;
+    font-size: 2.5vmin;
+    text-shadow: 0.2vmin 0.2vmin 0.4vmin #000000;
 }
 
 #score, #life {
-    margin-bottom: 5px;
+    margin-bottom: 0.5vh;
 }
 
 #ultGauge {
-    width: 150px;
-    height: 20px;
+    width: 20vw;
+    height: 2.5vh;
     background-color: #555;
-    border: 2px solid #fff;
-    border-radius: 5px;
+    border: 0.2vmin solid #fff;
+    border-radius: 0.5vmin;
     overflow: hidden;
 }
 
@@ -279,9 +275,7 @@ canvas {
 }
 
 #pngtuberContainer {
-    width: 300px;
-    height: 300px;
-    /* background-image: url('path/to/your/pngtuber.png'); */ /* game.jsで設定 */
+    /* サイズはgame.jsで動的に設定 */
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center bottom;

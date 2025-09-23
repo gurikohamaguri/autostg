@@ -37,11 +37,42 @@ canvas.height = window.innerHeight;
 // --- スマホ・タッチ操作判定 ---
 const isMobile = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
 
-if (isMobile) {
-    const pngtuberSize = window.innerHeight * 0.15;
+let pngtuberSize;
+function calculatePngTuberSize() {
+    const isLandscape = window.innerWidth > window.innerHeight;
+    if (isMobile) {
+        // スマホなら画面の高さの25%
+        pngtuberSize = window.innerHeight * 0.25;
+    } else {
+        // PCなら画面の高さの30%
+        pngtuberSize = window.innerHeight * 0.3;
+    }
+    // ただし、横長画面の場合は幅を取りすぎないように、画面幅の20%を上限とする
+    if (isLandscape) {
+        pngtuberSize = Math.min(pngtuberSize, window.innerWidth * 0.2);
+    }
     pngtuberContainer.style.height = `${pngtuberSize}px`;
     pngtuberContainer.style.width = `${pngtuberSize}px`;
 }
+
+function adjustUiForMobile() {
+    if (isMobile) {
+        const uiContainerRight = 2; // vw
+        const uiContainerBottom = 2; // vh
+        const buttonMargin = 2; // vw
+
+        gameUiContainer.style.right = `${uiContainerRight}vw`;
+        gameUiContainer.style.bottom = `${uiContainerBottom}vh`;
+
+        const pngtuberWidthVW = (pngtuberSize / window.innerWidth) * 100;
+        const ultButtonRight = uiContainerRight + pngtuberWidthVW + buttonMargin;
+
+        ultButton.style.right = `${ultButtonRight}vw`;
+    }
+}
+
+calculatePngTuberSize();
+adjustUiForMobile();
 
 // --- オーディオコントロール ---
 const audioControlsContainer = document.getElementById('audioControls');
@@ -273,7 +304,7 @@ class Bullet {
 class Player {
     constructor() {
         if (isMobile) {
-            this.height = canvas.height * 0.15;
+            this.height = Math.min(canvas.width, canvas.height) * 0.15;
             this.width = this.height;
         } else {
             this.width = 150;
@@ -421,10 +452,11 @@ class Enemy {
         this.shootCooldown = Math.random() * 100 + 50;
 
         if (isMobile) {
+            const baseSize = Math.min(canvas.width, canvas.height);
             switch (sizeType) {
-                case 'S': this.height = canvas.height * 0.20; break;
-                case 'M': this.height = canvas.height * 0.25; break;
-                case 'L': this.height = canvas.height * 0.30; break;
+                case 'S': this.height = baseSize * 0.20; break;
+                case 'M': this.height = baseSize * 0.25; break;
+                case 'L': this.height = baseSize * 0.30; break;
             }
             this.width = this.height;
         } else {
@@ -558,8 +590,14 @@ class Enemy {
 
 class Boss {
     constructor() {
-        this.width = 250;
-        this.height = 250;
+        if (isMobile) {
+            const baseSize = Math.min(canvas.width, canvas.height);
+            this.width = baseSize * 0.35;
+            this.height = baseSize * 0.35;
+        } else {
+            this.width = 250;
+            this.height = 250;
+        }
         this.x = canvas.width;
         this.y = canvas.height / 2 - this.height / 2;
         this.image = assets.bosses[Math.floor(Math.random() * assets.bosses.length)];
@@ -754,7 +792,7 @@ function loadAudio(src) {
     return new Promise((resolve, reject) => {
         const audio = new Audio();
         // oncanplaythroughは読み込みが完了しないことがあるため、canplayに変更
-        audio.oncanplay = () => {
+        audio.oncanplaythrough = () => {
             assetsLoaded++;
             updateLoadingProgress();
             resolve(audio);
@@ -1585,10 +1623,18 @@ function checkOrientation() {
         orientationOverlay.style.display = 'flex';
     } else {
         orientationOverlay.style.display = 'none';
+        // 画面の向きが変わった時にUIを再調整
+        calculatePngTuberSize();
+        adjustUiForMobile();
     }
 }
 
-window.addEventListener('resize', checkOrientation);
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    checkOrientation();
+});
+
 checkOrientation();
 
 
