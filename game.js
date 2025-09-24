@@ -31,8 +31,25 @@ if (exitButton) {
     });
 }
 
+// --- レスポンシブ対応 ---
+const referenceHeight = 900; // 基準となる画面の高さ
+let scale = 1;
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+scale = canvas.height / referenceHeight;
+
+function recalculateScaling() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    scale = canvas.height / referenceHeight;
+    calculatePngTuberSize();
+    adjustUiForMobile();
+}
+
+function scaleValue(value) {
+    return value * scale;
+}
 
 // --- スマホ・タッチ操作判定 ---
 const isMobile = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
@@ -84,92 +101,37 @@ const audioControls = {
 // --- アセットのパス ---
 const assetPaths = {
     player: [
-        'assets/f/f_0.png', 'assets/f/f_1.png', 'assets/f/f_2.png', 'assets/f/f_3.png', 'assets/f/f_4.png',
-        'assets/f/f_5.png', 'assets/f/f_6.png', 'assets/f/f_7.png', 'assets/f/f_8.png', 'assets/f/f_9.png',
-        'assets/f/f_10.png', 'assets/f/f_11.png', 'assets/f/f_12.png', 'assets/f/f_13.png', 'assets/f/f_14.png',
-        'assets/f/f_15.png', 'assets/f/f_16.png', 'assets/f/f_17.png', 'assets/f/f_18.png', 'assets/f/f_19.png',
-        'assets/f/f_20.png', 'assets/f/f_21.png', 'assets/f/f_22.png', 'assets/f/f_23.png', 'assets/f/f_24.png',
-        'assets/f/f_25.png', 'assets/f/f_26.png', 'assets/f/f_27.png', 'assets/f/f_28.png', 'assets/f/f_29.png',
-        'assets/f/f_30.png', 'assets/f/f_31.png', 'assets/f/f_32.png', 'assets/f/f_33.png', 'assets/f/f_34.png',
-        'assets/f/f_35.png', 'assets/f/f_36.png', 'assets/f/f_37.png', 'assets/f/f_38.png', 'assets/f/f_39.png',
-        'assets/f/f_40.png', 'assets/f/f_41.png', 'assets/f/f_42.png', 'assets/f/f_43.png', 'assets/f/f_44.png',
-        'assets/f/f_45.png', 'assets/f/f_46.png', 'assets/f/f_47.png', 'assets/f/f_48.png', 'assets/f/f_49.png',
-        'assets/f/f_50.png'
+        'assets/f/f_33.png', 'assets/f/f_24.png', 'assets/f/f_20.png', 'assets/f/f_8.png', 'assets/f/f_6.png', 'assets/f/f_3.png', 'assets/f/f64.png', 'assets/f/f63.png', 'assets/f/f62.png', 'assets/f/f61.png', 'assets/f/f60.png', 'assets/f/f58.png', 'assets/f/F_55.png', 'assets/f/f56.png', 'assets/f/f59.png', 'assets/f/F_54.png', 'assets/f/f_51.png', 'assets/f/f55.png', 'assets/f/f57.png', 'assets/f/f65.png', 'assets/f/f_52.png', 'assets/f/F_53.png', 'assets/f/f_0.png', 'assets/f/f_1.png', 'assets/f/f_10.png', 'assets/f/f_11.png', 'assets/f/f_12.png', 'assets/f/f_13.png', 'assets/f/f_14.png', 'assets/f/f_15.png', 'assets/f/f_16.png', 'assets/f/f_17.png', 'assets/f/f_18.png', 'assets/f/f_19.png', 'assets/f/f_2.png', 'assets/f/f_21.png', 'assets/f/f_22.png', 'assets/f/f_23.png', 'assets/f/f_25.png', 'assets/f/f_26.png', 'assets/f/f_27.png', 'assets/f/f_28.png', 'assets/f/f_29.png', 'assets/f/f_30.png', 'assets/f/f_31.png', 'assets/f/f_32.png', 'assets/f/f_34.png', 'assets/f/f_35.png', 'assets/f/f_36.png', 'assets/f/f_37.png', 'assets/f/f_38.png', 'assets/f/f_39.png', 'assets/f/f_4.png', 'assets/f/f_40.png', 'assets/f/f_41.png', 'assets/f/f_42.png', 'assets/f/f_43.png', 'assets/f/f_44.png', 'assets/f/f_45.png', 'assets/f/f_46.png', 'assets/f/f_47.png', 'assets/f/f_48.png', 'assets/f/f_49.png', 'assets/f/f_5.png', 'assets/f/f_50.png', 'assets/f/f_7.png', 'assets/f/f_9.png'
     ],
     enemies: [
-        'assets/e/e_0.png', 'assets/e/e_1.png', 'assets/e/e_2.png', 'assets/e/e_3.png', 'assets/e/e_4.png',
-        'assets/e/e_5.png', 'assets/e/e_6.png', 'assets/e/e_7.png', 'assets/e/e_8.png', 'assets/e/e_9.png',
-        'assets/e/e_10.png', 'assets/e/e_11.png', 'assets/e/e_12.png', 'assets/e/e_13.png', 'assets/e/e_14.png',
-        'assets/e/e_15.png', 'assets/e/e_16.png', 'assets/e/e_17.png', 'assets/e/e_18.png', 'assets/e/e_19.png',
-        'assets/e/e_20.png', 'assets/e/e_21.png', 'assets/e/e_22.png', 'assets/e/e_23.png', 'assets/e/e_24.png',
-        'assets/e/e_25.png', 'assets/e/e_26.png', 'assets/e/e_27.png', 'assets/e/e_28.png', 'assets/e/e_29.png',
-        'assets/e/e_30.png', 'assets/e/e_31.png', 'assets/e/e_32.png', 'assets/e/e_33.png', 'assets/e/e_34.png',
-        'assets/e/e_35.png', 'assets/e/e_36.png', 'assets/e/e_37.png', 'assets/e/e_38.png', 'assets/e/e_39.png',
-        'assets/e/e_40.png', 'assets/e/e_41.png', 'assets/e/e_42.png', 'assets/e/e_43.png', 'assets/e/e_44.png',
-        'assets/e/e_45.png', 'assets/e/e_46.png', 'assets/e/e_47.png', 'assets/e/e_48.png', 'assets/e/e_49.png',
-        'assets/e/e_50.png', 'assets/e/e_51.png', 'assets/e/e_52.png', 'assets/e/e_53.png', 'assets/e/e_54.png',
-        'assets/e/e_55.png', 'assets/e/e_56.png', 'assets/e/e_57.png', 'assets/e/e_58.png', 'assets/e/e_59.png',
-        'assets/e/e_60.png', 'assets/e/e_61.png', 'assets/e/e_62.png', 'assets/e/e_63.png', 'assets/e/e_64.png',
-        'assets/e/e_65.png'
+        'assets/e/e71.png', 'assets/e/e67.png', 'assets/e/e68.png', 'assets/e/e69.png', 'assets/e/e70.png', 'assets/e/e72.png', 'assets/e/e-66.png', 'assets/e/e_10.png', 'assets/e/e_11.png', 'assets/e/e_12.png', 'assets/e/e_13.png', 'assets/e/e_14.png', 'assets/e/e_15.png', 'assets/e/e_16.png', 'assets/e/e_17.png', 'assets/e/e_18.png', 'assets/e/e_19.png', 'assets/e/e_20.png', 'assets/e/e_21.png', 'assets/e/e_22.png', 'assets/e/e_23.png', 'assets/e/e_24.png', 'assets/e/e_25.png', 'assets/e/e_26.png', 'assets/e/e_27.png', 'assets/e/e_28.png', 'assets/e/e_29.png', 'assets/e/e_30.png', 'assets/e/e_31.png', 'assets/e/e_32.png', 'assets/e/e_33.png', 'assets/e/e_36.png', 'assets/e/e_37.png', 'assets/e/e_39.png', 'assets/e/e_4.png', 'assets/e/e_40.png', 'assets/e/e_41.png', 'assets/e/e_42.png', 'assets/e/e_43.png', 'assets/e/e_44.png', 'assets/e/e_45.png', 'assets/e/e_47.png', 'assets/e/e_48.png', 'assets/e/e_49.png', 'assets/e/e_5.png', 'assets/e/e_50.png', 'assets/e/e_51.png', 'assets/e/e_53.png', 'assets/e/e_54.png', 'assets/e/e_55.png', 'assets/e/e_56.png', 'assets/e/e_57.png', 'assets/e/e_58.png', 'assets/e/e_59.png', 'assets/e/e_6.png', 'assets/e/e_60.png', 'assets/e/e_61.png', 'assets/e/e_62.png', 'assets/e/e_63.png', 'assets/e/e_64.png', 'assets/e/e_65.png', 'assets/e/e_8.png', 'assets/e/e_9.png'
     ],
     bosses: [
-        'assets/b/b_0.png', 'assets/b/b_1.png', 'assets/b/b_2.png', 'assets/b/b_3.png', 'assets/b/b_4.png',
-        'assets/b/b_5.png'
+        'assets/b/b_0.png', 'assets/b/b_1.png', 'assets/b/b_2.png', 'assets/b/b_3.png', 'assets/b/b_4.png', 'assets/b/b_5.png'
     ],
     backgrounds: [
-        'assets/bg/bg_0.jpg', 'assets/bg/bg_1.jpg', 'assets/bg/bg_2.png', 'assets/bg/bg_3.png', 'assets/bg/bg_4.png',
-        'assets/bg/bg_5.png', 'assets/bg/bg_6.png', 'assets/bg/bg_7.png', 'assets/bg/bg_8.png', 'assets/bg/bg_9.png',
-        'assets/bg/bg_10.png', 'assets/bg/bg_11.png', 'assets/bg/bg_12.png', 'assets/bg/bg_13.png', 'assets/bg/bg_14.png',
-        'assets/bg/bg_15.jpg', 'assets/bg/bg_16.png', 'assets/bg/bg_17.png', 'assets/bg/bg_18.png', 'assets/bg/bg_19.png',
-        'assets/bg/bg_20.png', 'assets/bg/bg_21.png', 'assets/bg/bg_22.png', 'assets/bg/bg_23.png', 'assets/bg/bg_24.png',
-        'assets/bg/bg_25.png', 'assets/bg/bg_26.jpg', 'assets/bg/bg_27.png', 'assets/bg/bg_28.png', 'assets/bg/bg_29.png',
-        'assets/bg/bg_30.png', 'assets/bg/bg_31.png', 'assets/bg/bg_32.png', 'assets/bg/bg_33.png', 'assets/bg/bg_34.png',
-        'assets/bg/bg_35.png', 'assets/bg/bg_36.png', 'assets/bg/bg_37.png', 'assets/bg/bg_38.png', 'assets/bg/bg_39.png',
-        'assets/bg/bg_40.png', 'assets/bg/bg_41.png', 'assets/bg/bg_42.png', 'assets/bg/bg_43.png', 'assets/bg/bg_44.png',
-        'assets/bg/bg_45.png', 'assets/bg/bg_46.png', 'assets/bg/bg_47.png', 'assets/bg/bg_48.png', 'assets/bg/bg_49.png',
-        'assets/bg/bg_50.png', 'assets/bg/bg_51.png', 'assets/bg/bg_52.png', 'assets/bg/bg_53.png', 'assets/bg/bg_54.png',
-        'assets/bg/bg_55.png', 'assets/bg/bg_56.png', 'assets/bg/bg_57.png', 'assets/bg/bg_58.png', 'assets/bg/bg_59.png',
-        'assets/bg/bg_60.png', 'assets/bg/bg_61.png', 'assets/bg/bg_62.png', 'assets/bg/bg_63.png', 'assets/bg/bg_64.png',
-        'assets/bg/bg_65.png', 'assets/bg/bg_66.png', 'assets/bg/bg_67.png', 'assets/bg/bg_68.png', 'assets/bg/bg_69.png',
-        'assets/bg/bg_70.png', 'assets/bg/bg_71.png', 'assets/bg/bg_72.png', 'assets/bg/bg_73.png', 'assets/bg/bg_74.png',
-        'assets/bg/bg_75.png', 'assets/bg/bg_76.png', 'assets/bg/bg_77.png', 'assets/bg/bg_78.png', 'assets/bg/bg_79.png',
-        'assets/bg/bg_80.png', 'assets/bg/bg_81.png', 'assets/bg/bg_82.png', 'assets/bg/bg_83.png', 'assets/bg/bg_84.png',
-        'assets/bg/bg_85.png', 'assets/bg/bg_86.png', 'assets/bg/bg_87.png', 'assets/bg/bg_88.png', 'assets/bg/bg_89.png',
-        'assets/bg/bg_90.png', 'assets/bg/bg_91.png', 'assets/bg/bg_92.png', 'assets/bg/bg_93.png', 'assets/bg/bg_94.png',
-        'assets/bg/bg_95.png', 'assets/bg/bg_96.png', 'assets/bg/bg_98.png', 'assets/bg/bg_99.png', 'assets/bg/bg_100.png',
-        'assets/bg/bg_101.png', 'assets/bg/bg_102.png'
+        'assets/bg/bg_0.jpg', 'assets/bg/bg_1.jpg', 'assets/bg/bg_10.png', 'assets/bg/bg_100.png', 'assets/bg/bg_101.png', 'assets/bg/bg_102.png', 'assets/bg/bg_11.png', 'assets/bg/bg_12.png', 'assets/bg/bg_13.png', 'assets/bg/bg_14.png', 'assets/bg/bg_15.jpg', 'assets/bg/bg_16.png', 'assets/bg/bg_17.png', 'assets/bg/bg_18.png', 'assets/bg/bg_19.png', 'assets/bg/bg_2.png', 'assets/bg/bg_20.png', 'assets/bg/bg_21.png', 'assets/bg/bg_22.png', 'assets/bg/bg_23.png', 'assets/bg/bg_24.png', 'assets/bg/bg_25.png', 'assets/bg/bg_26.jpg', 'assets/bg/bg_26.png', 'assets/bg/bg_27.png', 'assets/bg/bg_28.png', 'assets/bg/bg_29.png', 'assets/bg/bg_3.png', 'assets/bg/bg_30.png', 'assets/bg/bg_31.png', 'assets/bg/bg_32.png', 'assets/bg/bg_33.png', 'assets/bg/bg_34.png', 'assets/bg/bg_35.png', 'assets/bg/bg_36.png', 'assets/bg/bg_37.png', 'assets/bg/bg_38.png', 'assets/bg/bg_39.png', 'assets/bg/bg_4.png', 'assets/bg/bg_40.png', 'assets/bg/bg_41.png', 'assets/bg/bg_42.png', 'assets/bg/bg_43.png', 'assets/bg/bg_44.png', 'assets/bg/bg_45.png', 'assets/bg/bg_46.png', 'assets/bg/bg_47.png', 'assets/bg/bg_48.png', 'assets/bg/bg_49.png', 'assets/bg/bg_5.png', 'assets/bg/bg_50.png', 'assets/bg/bg_51.png', 'assets/bg/bg_52.png', 'assets/bg/bg_53.png', 'assets/bg/bg_54.png', 'assets/bg/bg_55.png', 'assets/bg/bg_56.png', 'assets/bg/bg_57.png', 'assets/bg/bg_58.png', 'assets/bg/bg_59.png', 'assets/bg/bg_6.png', 'assets/bg/bg_60.png', 'assets/bg/bg_61.png', 'assets/bg/bg_62.png', 'assets/bg/bg_63.png', 'assets/bg/bg_64.png', 'assets/bg/bg_65.png', 'assets/bg/bg_66.png', 'assets/bg/bg_67.png', 'assets/bg/bg_68.png', 'assets/bg/bg_69.png', 'assets/bg/bg_7.png', 'assets/bg/bg_70.png', 'assets/bg/bg_71.png', 'assets/bg/bg_72.png', 'assets/bg/bg_73.png', 'assets/bg/bg_74.png', 'assets/bg/bg_75.png', 'assets/bg/bg_76.png', 'assets/bg/bg_77.png', 'assets/bg/bg_78.png', 'assets/bg/bg_79.png', 'assets/bg/bg_8.png', 'assets/bg/bg_80.png', 'assets/bg/bg_81.png', 'assets/bg/bg_82.png', 'assets/bg/bg_83.png', 'assets/bg/bg_84.png', 'assets/bg/bg_85.png', 'assets/bg/bg_86.png', 'assets/bg/bg_87.png', 'assets/bg/bg_88.png', 'assets/bg/bg_89.png', 'assets/bg/bg_9.png', 'assets/bg/bg_90.png', 'assets/bg/bg_91.png', 'assets/bg/bg_92.png', 'assets/bg/bg_93.png', 'assets/bg/bg_94.png', 'assets/bg/bg_95.png', 'assets/bg/bg_96.png', 'assets/bg/bg_98.png', 'assets/bg/bg_99.png'
     ],
     cutins: [
-        'assets/c/c_0.png', 'assets/c/c_1.png', 'assets/c/c_2.png', 'assets/c/c_3.png', 'assets/c/c_4.png',
-        'assets/c/c_5.png', 'assets/c/c_6.png', 'assets/c/c_7.png', 'assets/c/c_8.png', 'assets/c/c_9.png',
-        'assets/c/c_10.png', 'assets/c/c_11.png', 'assets/c/c_12.png', 'assets/c/c_13.png', 'assets/c/c_14.png',
-        'assets/c/c_15.png', 'assets/c/c_16.png', 'assets/c/c_17.png', 'assets/c/c_18.png', 'assets/c/c_19.png',
-        'assets/c/c_20.png', 'assets/c/c_21.png', 'assets/c/c_22.png'
+        'assets/c/26.png', 'assets/c/c_0.png', 'assets/c/c_1.png', 'assets/c/c_11.png', 'assets/c/c_12.png', 'assets/c/c_13.png', 'assets/c/c_14.png', 'assets/c/c_15.png', 'assets/c/c_16.png', 'assets/c/c_17.png', 'assets/c/c_18.png', 'assets/c/c_19.png', 'assets/c/c_2.png', 'assets/c/c_20.png', 'assets/c/c_21.png', 'assets/c/c_3.png', 'assets/c/c_4.png', 'assets/c/c_5.png', 'assets/c/c_7.png', 'assets/c/c_8.png', 'assets/c/c_9.png', 'assets/c/c22.png', 'assets/c/c23.png', 'assets/c/c24.png', 'assets/c/c25.png', 'assets/c/c27.png', 'assets/c/c28.png', 'assets/c/c29.png', 'assets/c/c30.png', 'assets/c/c31.png', 'assets/c/c32.png', 'assets/c/c33.png', 'assets/c/c34.png', 'assets/c/c35.png', 'assets/c/c36.png', 'assets/c/c37.png', 'assets/c/c38.png', 'assets/c/c39.png', 'assets/c/c40.png', 'assets/c/c41.png', 'assets/c/c42.png', 'assets/c/c43.png', 'assets/c/c44.png', 'assets/c/c45.png'
     ],
     bgm: {
         normal: [
-            'assets/bgm/normal/bgm_1.mp3', 'assets/bgm/normal/bgm_10.mp3', 'assets/bgm/normal/bgm_12.mp3', 'assets/bgm/normal/bgm_15.mp3', 'assets/bgm/normal/bgm_16.mp3',
-            'assets/bgm/normal/bgm_17.mp3', 'assets/bgm/normal/bgm_2.mp3', 'assets/bgm/normal/bgm_21.mp3', 'assets/bgm/normal/bgm_25.mp3', 'assets/bgm/normal/bgm_28.mp3',
-            'assets/bgm/normal/bgm_29.mp3', 'assets/bgm/normal/bgm_30.mp3', 'assets/bgm/normal/bgm_31.mp3', 'assets/bgm/normal/bgm_33.mp3', 'assets/bgm/normal/bgm_38.mp3',
-            'assets/bgm/normal/bgm_39.mp3', 'assets/bgm/normal/bgm_4.mp3', 'assets/bgm/normal/bgm_43.mp3', 'assets/bgm/normal/bgm_45.mp3', 'assets/bgm/normal/bgm_50.mp3',
-            'assets/bgm/normal/bgm_51.mp3', 'assets/bgm/normal/bgm_52.mp3', 'assets/bgm/normal/bgm_7.mp3', 'assets/bgm/normal/bgm_8.mp3', 'assets/bgm/normal/bgm_9.mp3'
+            'assets/bgm/normal/bgm_1.mp3', 'assets/bgm/normal/bgm_10.mp3', 'assets/bgm/normal/bgm_12.mp3', 'assets/bgm/normal/bgm_15.mp3', 'assets/bgm/normal/bgm_16.mp3', 'assets/bgm/normal/bgm_17.mp3', 'assets/bgm/normal/bgm_2.mp3', 'assets/bgm/normal/bgm_21.mp3', 'assets/bgm/normal/bgm_25.mp3', 'assets/bgm/normal/bgm_28.mp3', 'assets/bgm/normal/bgm_29.mp3', 'assets/bgm/normal/bgm_30.mp3', 'assets/bgm/normal/bgm_31.mp3', 'assets/bgm/normal/bgm_33.mp3', 'assets/bgm/normal/bgm_38.mp3', 'assets/bgm/normal/bgm_39.mp3', 'assets/bgm/normal/bgm_4.mp3', 'assets/bgm/normal/bgm_43.mp3', 'assets/bgm/normal/bgm_45.mp3', 'assets/bgm/normal/bgm_50.mp3', 'assets/bgm/normal/bgm_51.mp3', 'assets/bgm/normal/bgm_52.mp3', 'assets/bgm/normal/bgm_7.mp3', 'assets/bgm/normal/bgm_8.mp3', 'assets/bgm/normal/bgm_9.mp3'
         ],
         boss: [
-            'assets/bgm/boss/bbgm_18.mp3', 'assets/bgm/boss/bbgm_19.mp3', 'assets/bgm/boss/bbgm_20.mp3', 'assets/bgm/boss/bbgm_22.mp3', 'assets/bgm/boss/bbgm_23.mp3',
-            'assets/bgm/boss/bbgm_26.mp3', 'assets/bgm/boss/bbgm_44.mp3', 'assets/bgm/boss/bbgm_46.mp3', 'assets/bgm/boss/bbgm_47.mp3', 'assets/bgm/boss/bbgm_48.mp3',
-            'assets/bgm/boss/bbgm_49.mp3'
+            'assets/bgm/boss/bbgm_18.mp3', 'assets/bgm/boss/bbgm_19.mp3', 'assets/bgm/boss/bbgm_20.mp3', 'assets/bgm/boss/bbgm_22.mp3', 'assets/bgm/boss/bbgm_23.mp3', 'assets/bgm/boss/bbgm_26.mp3', 'assets/bgm/boss/bbgm_44.mp3', 'assets/bgm/boss/bbgm_46.mp3', 'assets/bgm/boss/bbgm_47.mp3', 'assets/bgm/boss/bbgm_48.mp3', 'assets/bgm/boss/bbgm_49.mp3'
         ]
     },
     endings: [
-        'assets/ed/Hallucination.mp4', 'assets/ed/one-page-at-a-time.mp4',
-        'assets/ed/thanks-for-being-there-for-me.mp4', 'assets/ed/the-western-star-aglow.mp4'
+        'assets/ed/Hallucination.mp4', 'assets/ed/one-page-at-a-time.mp4', 'assets/ed/thanks-for-being-there-for-me.mp4', 'assets/ed/the-western-star-aglow.mp4'
     ],
     pngtuber: {
-        oo: 'assets/png/oo.png',
-        oc: 'assets/png/oc.png',
-        co: 'assets/png/co.png',
         cc: 'assets/png/cc.png',
+        co: 'assets/png/co.png',
         dd: 'assets/png/dd.png',
+        oc: 'assets/png/oc.png',
+        oo: 'assets/png/oo.png'
     },
     voices: {
         damage: [
@@ -259,10 +221,10 @@ class Bullet {
     constructor(x, y, speedX = 10, speedY = 0, color = 'yellow', width = 15, height = 5) {
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
-        this.speedX = speedX;
-        this.speedY = speedY;
+        this.width = scaleValue(width);
+        this.height = scaleValue(height);
+        this.speedX = scaleValue(speedX);
+        this.speedY = scaleValue(speedY);
         this.color = color;
         this.active = true;
         this.homing = false;
@@ -275,7 +237,7 @@ class Bullet {
             const dy = (player.y + player.height / 2) - this.y;
             const angle = Math.atan2(dy, dx);
             const speed = Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
-            const acceleration = 0.05; // How quickly it adjusts course
+            const acceleration = 0.05;
             this.speedX += Math.cos(angle) * acceleration;
             this.speedY += Math.sin(angle) * acceleration;
 
@@ -307,12 +269,12 @@ class Player {
             this.height = Math.min(canvas.width, canvas.height) * 0.15;
             this.width = this.height;
         } else {
-            this.width = 150;
-            this.height = 150;
+            this.width = scaleValue(150);
+            this.height = scaleValue(150);
         }
-        this.x = 100;
+        this.x = scaleValue(100);
         this.y = canvas.height / 2 - this.height / 2;
-        this.speed = 7;
+        this.speed = scaleValue(7);
         this.image = assets.player[Math.floor(Math.random() * assets.player.length)];
         this.bullets = [];
         this.shootCooldown = 0;
@@ -384,7 +346,7 @@ class Player {
 
     shoot() {
         const bulletX = this.x + this.width;
-        const bulletY = this.y + this.height / 2 - 2.5;
+        const bulletY = this.y + this.height / 2 - scaleValue(2.5);
         this.bullets.push(new Bullet(bulletX, bulletY));
     }
 
@@ -440,7 +402,7 @@ class Player {
 class Enemy {
     constructor() {
         this.x = canvas.width;
-        this.y = Math.random() * (canvas.height - 200) + 100; // 上下端に寄らないように調整
+        this.y = Math.random() * (canvas.height - scaleValue(200)) + scaleValue(100); // 上下端に寄らないように調整
         this.image = assets.enemies[Math.floor(Math.random() * assets.enemies.length)];
         this.active = true;
         this.hitTimer = 0;
@@ -461,26 +423,26 @@ class Enemy {
             this.width = this.height;
         } else {
             switch (sizeType) {
-                case 'S': this.width = 200; this.height = 200; break;
-                case 'M': this.width = 250; this.height = 250; break;
-                case 'L': this.width = 300; this.height = 300; break;
+                case 'S': this.width = scaleValue(200); this.height = scaleValue(200); break;
+                case 'M': this.width = scaleValue(250); this.height = scaleValue(250); break;
+                case 'L': this.width = scaleValue(300); this.height = scaleValue(300); break;
             }
         }
 
         this.moveType = moveType;
-        this.speedX = -Math.random() * 2 - 1;
+        this.speedX = -Math.random() * scaleValue(2) - scaleValue(1);
         this.speedY = 0;
 
         // 新しい移動パターンのためのプロパティ初期化
         if (this.moveType === 'zigzag') {
             this.initialY = this.y;
-            this.amplitude = [30, 60, 90][Math.floor(Math.random() * 3)]; // 振れ幅
-            this.speedY = Math.random() > 0.5 ? 2 : -2; // 初期のY方向
+            this.amplitude = scaleValue([30, 60, 90][Math.floor(Math.random() * 3)]); // 振れ幅
+            this.speedY = (Math.random() > 0.5 ? 2 : -2) * scale;
         } else if (this.moveType === 'circle') {
             this.centerY = this.y;
-            this.radius = [40, 80, 120][Math.floor(Math.random() * 3)]; // 円の半径
+            this.radius = scaleValue([40, 80, 120][Math.floor(Math.random() * 3)]); // 円の半径
             this.angle = 0;
-            this.angleSpeed = (Math.random() * 0.04 + 0.02) * (Math.random() > 0.5 ? 1 : -1); // 回転速度と方向
+            this.angleSpeed = (Math.random() * 0.04 + 0.02) * (Math.random() > 0.5 ? 1 : -1);
         }
     }
 
@@ -566,7 +528,7 @@ class Enemy {
                 enemyBullets.push(new Bullet(bulletX, bulletY, Math.cos(angle) * speed, Math.sin(angle) * speed, '#ff4444'));
                 break;
             case 'beam':
-                enemyBullets.push(new Bullet(bulletX, bulletY - 10, -8 * speedMultiplier, 0, '#ff0000', 50, 20));
+                enemyBullets.push(new Bullet(bulletX, bulletY - scaleValue(10), -8 * speedMultiplier, 0, '#ff0000', 50, 20));
                 break;
             case 'radial':
                 const bulletCount = isBossEnraged ? 9 : 6;
@@ -595,16 +557,16 @@ class Boss {
             this.width = baseSize * 0.35;
             this.height = baseSize * 0.35;
         } else {
-            this.width = 250;
-            this.height = 250;
+            this.width = scaleValue(250);
+            this.height = scaleValue(250);
         }
         this.x = canvas.width;
         this.y = canvas.height / 2 - this.height / 2;
         this.image = assets.bosses[Math.floor(Math.random() * assets.bosses.length)];
         this.health = 100;
         this.maxHealth = 100;
-        this.speedX = -1;
-        this.speedY = 1;
+        this.speedX = scaleValue(-1);
+        this.speedY = scaleValue(1);
         this.shootCooldown = 0;
         this.hitTimer = 0;
         this.attackPhase = 0;
@@ -619,7 +581,7 @@ class Boss {
         const speedMultiplier = isBossEnraged ? 1.5 : 1;
 
         // 初期位置まで移動
-        if (this.x > canvas.width - this.width - 50) {
+        if (this.x > canvas.width - this.width - scaleValue(50)) {
             this.x += this.speedX * speedMultiplier;
         } else {
             // 上下に移動
@@ -661,10 +623,10 @@ class Boss {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         }
         // HPバー
-        const barWidth = 400;
-        const barHeight = 20;
+        const barWidth = scaleValue(400);
+        const barHeight = scaleValue(20);
         const barX = canvas.width / 2 - barWidth / 2;
-        const barY = 20;
+        const barY = scaleValue(20);
         ctx.fillStyle = '#555';
         ctx.fillRect(barX, barY, barWidth, barHeight);
         ctx.fillStyle = '#ff0000';
@@ -689,7 +651,7 @@ class Boss {
             case 1: // 幅広直線 (Wide Straight)
                 const wideCount = isBossEnraged ? 5 : 3;
                 for (let i = -wideCount; i <= wideCount; i++) {
-                    enemyBullets.push(new Bullet(this.x, this.y + this.height/2 + i * 20, -7 * speedMultiplier, 0, '#ff99ff', 15, 15));
+                    enemyBullets.push(new Bullet(this.x, this.y + this.height/2 + i * scaleValue(20), -7 * speedMultiplier, 0, '#ff99ff', 15, 15));
                 }
                 break;
             case 2: // 3方向弾 (3-way)
@@ -858,6 +820,7 @@ async function loadAssets() {
 
 // --- ゲーム初期化 ---
 function initGame() {
+    recalculateScaling(); // ゲーム開始時にもスケーリングを再計算
     player = new Player();
     boss = null;
     enemies = [];
@@ -1170,16 +1133,16 @@ function updateUI() {
 }
 
 function drawControls(yOffset) {
-    ctx.font = '20px "Meiryo"';
+    ctx.font = `${scaleValue(20)}px "Meiryo"`;
     ctx.textAlign = 'center';
     if (isMobile) {
         ctx.fillText('スワイプ: 移動', canvas.width / 2, yOffset);
-        ctx.fillText('自動で攻撃します', canvas.width / 2, yOffset + 30);
+        ctx.fillText('自動で攻撃します', canvas.width / 2, yOffset + scaleValue(30));
     } else {
         ctx.fillText('WASD/矢印: 移動', canvas.width / 2, yOffset);
-        ctx.fillText('スペース/左クリック: 攻撃', canvas.width / 2, yOffset + 30);
-        ctx.fillText('Shift/右クリック: ULT', canvas.width / 2, yOffset + 60);
-        ctx.fillText('ESC: 一時停止', canvas.width / 2, yOffset + 90);
+        ctx.fillText('スペース/左クリック: 攻撃', canvas.width / 2, yOffset + scaleValue(30));
+        ctx.fillText('Shift/右クリック: ULT', canvas.width / 2, yOffset + scaleValue(60));
+        ctx.fillText('ESC: 一時停止', canvas.width / 2, yOffset + scaleValue(90));
     }
 }
 
@@ -1187,14 +1150,14 @@ function drawLoadingScreen() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
-    ctx.font = '30px "MS Gothic"';
+    ctx.font = `${scaleValue(30)}px "MS Gothic"`;
     ctx.textAlign = 'center';
     if (assetsToLoad > 0) {
-        ctx.fillText(`Now Loading... (${assetsLoaded}/${assetsToLoad})`, canvas.width / 2, canvas.height / 2 - 50);
+        ctx.fillText(`Now Loading... (${assetsLoaded}/${assetsToLoad})`, canvas.width / 2, canvas.height / 2 - scaleValue(50));
     } else {
-        ctx.fillText('Now Loading...', canvas.width / 2, canvas.height / 2 - 50);
+        ctx.fillText('Now Loading...', canvas.width / 2, canvas.height / 2 - scaleValue(50));
     }
-    drawControls(canvas.height / 2 + 50);
+    drawControls(canvas.height / 2 + scaleValue(50));
 }
 
 function drawTitleScreen() {
@@ -1207,15 +1170,15 @@ function drawTitleScreen() {
     }
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(0, canvas.height / 2 - 60, canvas.width, 260);
+    ctx.fillRect(0, canvas.height / 2 - scaleValue(60), canvas.width, scaleValue(260));
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 50px "Meiryo"';
+    ctx.font = `bold ${scaleValue(50)}px "Meiryo"`;
     ctx.textAlign = 'center';
     ctx.fillText('えいえんのアサリガール', canvas.width / 2, canvas.height / 2);
-    ctx.font = '24px "Meiryo"';
-    ctx.fillText(isMobile ? 'Tap to Start' : 'Click to Start', canvas.width / 2, canvas.height / 2 + 60);
+    ctx.font = `${scaleValue(24)}px "Meiryo"`;
+    ctx.fillText(isMobile ? 'Tap to Start' : 'Click to Start', canvas.width / 2, canvas.height / 2 + scaleValue(60));
 
-    drawControls(canvas.height / 2 + 110);
+    drawControls(canvas.height / 2 + scaleValue(110));
 }
 
 function drawGameScreen() {
@@ -1228,26 +1191,26 @@ function drawGameScreen() {
     enemyBullets.forEach(b => b.draw());
 
     // Draw timers
-    ctx.font = '30px "MS Gothic"';
+    ctx.font = `${scaleValue(30)}px "MS Gothic"`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    const hpBarRightX = canvas.width / 2 + 200;
-    const timerY = 30;
+    const hpBarRightX = canvas.width / 2 + scaleValue(200);
+    const timerY = scaleValue(30);
 
     if (bossEnrageTimer > 0) {
         ctx.fillStyle = 'white';
-        ctx.fillText(`CountDown: ${Math.ceil(bossEnrageTimer / 60)}`, hpBarRightX + 20, timerY);
+        ctx.fillText(`CountDown: ${Math.ceil(bossEnrageTimer / 60)}`, hpBarRightX + scaleValue(20), timerY);
     } else if (isBossEnraged && bossEnragePenaltyTimer > 0) {
         ctx.fillStyle = 'magenta';
-        ctx.fillText(`Penalty: ${Math.ceil(bossEnragePenaltyTimer / 60)}`, hpBarRightX + 20, timerY);
+        ctx.fillText(`Penalty: ${Math.ceil(bossEnragePenaltyTimer / 60)}`, hpBarRightX + scaleValue(20), timerY);
     }
 }
 
 function drawPausedScreen() {
     // ボタンのサイズと位置を定義
-    const buttonWidth = 280;
-    const buttonHeight = 70;
-    const gap = 40;
+    const buttonWidth = scaleValue(280);
+    const buttonHeight = scaleValue(70);
+    const gap = scaleValue(40);
     const totalHeight = buttonHeight * 2 + gap;
     const startY = (canvas.height - totalHeight) / 2;
 
@@ -1277,14 +1240,14 @@ function drawPausedScreen() {
     ctx.fillStyle = '#333';
     ctx.fillRect(resumeButtonRect.x, resumeButtonRect.y, resumeButtonRect.width, resumeButtonRect.height);
     ctx.fillStyle = '#fff';
-    ctx.font = '32px sans-serif';
+    ctx.font = `${scaleValue(32)}px sans-serif`;
     ctx.fillText('ゲームに戻る', canvas.width / 2, resumeButtonRect.y + buttonHeight / 2);
 
     // タイトルに戻るボタン
     ctx.fillStyle = '#333';
     ctx.fillRect(titleButtonRect.x, titleButtonRect.y, titleButtonRect.width, titleButtonRect.height);
     ctx.fillStyle = '#fff';
-    ctx.font = '32px sans-serif';
+    ctx.font = `${scaleValue(32)}px sans-serif`;
     ctx.fillText('タイトルに戻る', canvas.width / 2, titleButtonRect.y + buttonHeight / 2);
 }
 
@@ -1295,20 +1258,20 @@ function drawGameoverScreen() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 70px "Meiryo"';
+    ctx.font = `bold ${scaleValue(70)}px "Meiryo"`;
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 100);
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - scaleValue(100));
 
     const scores = calculateFinalScore();
-    ctx.font = '30px "Meiryo"';
-    ctx.fillText(`Score: ${scores.baseScore}`, canvas.width / 2, canvas.height / 2 - 20);
-    ctx.fillText(`Life Bonus: +${scores.lifeBonus}`, canvas.width / 2, canvas.height / 2 + 20);
-    ctx.fillText(`ULT Penalty: -${scores.ultPenalty}`, canvas.width / 2, canvas.height / 2 + 60);
-    ctx.font = 'bold 40px "Meiryo"';
-    ctx.fillText(`Final Score: ${scores.finalScore}`, canvas.width / 2, canvas.height / 2 + 110);
+    ctx.font = `${scaleValue(30)}px "Meiryo"`;
+    ctx.fillText(`Score: ${scores.baseScore}`, canvas.width / 2, canvas.height / 2 - scaleValue(20));
+    ctx.fillText(`Life Bonus: +${scores.lifeBonus}`, canvas.width / 2, canvas.height / 2 + scaleValue(20));
+    ctx.fillText(`ULT Penalty: -${scores.ultPenalty}`, canvas.width / 2, canvas.height / 2 + scaleValue(60));
+    ctx.font = `bold ${scaleValue(40)}px "Meiryo"`;
+    ctx.fillText(`Final Score: ${scores.finalScore}`, canvas.width / 2, canvas.height / 2 + scaleValue(110));
 
-    ctx.font = '24px "Meiryo"';
-    ctx.fillText(isMobile ? 'Tap to Restart' : 'Click to Restart', canvas.width / 2, canvas.height / 2 + 160);
+    ctx.font = `${scaleValue(24)}px "Meiryo"`;
+    ctx.fillText(isMobile ? 'Tap to Restart' : 'Click to Restart', canvas.width / 2, canvas.height / 2 + scaleValue(160));
 }
 
 function drawUltCutinScreen() {
@@ -1624,14 +1587,12 @@ function checkOrientation() {
     } else {
         orientationOverlay.style.display = 'none';
         // 画面の向きが変わった時にUIを再調整
-        calculatePngTuberSize();
-        adjustUiForMobile();
+        recalculateScaling();
     }
 }
 
 window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    recalculateScaling();
     checkOrientation();
 });
 
