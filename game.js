@@ -803,11 +803,29 @@ async function loadAssets() {
 
     try {
         await Promise.all(promises);
-        if (loading) {
-            loading.style.display = 'none';
+        const loadingText = document.querySelector('#loading p');
+        const loadingScreen = document.getElementById('loading');
+
+        if (loadingText) {
+            loadingText.textContent = "Click or Press any key to Start";
+            loadingScreen.style.cursor = 'pointer';
         }
-        setVolume(audioControls.volumeSlider.value);
-        setCurrentState(gameState.TITLE);
+
+        const startApp = () => {
+            // Remove both listeners to ensure this only runs once.
+            loadingScreen.removeEventListener('click', startApp);
+            window.removeEventListener('keydown', startApp);
+
+            if (loading) {
+                loading.style.display = 'none';
+            }
+            setVolume(audioControls.volumeSlider.value);
+            setCurrentState(gameState.TITLE);
+        };
+
+        loadingScreen.addEventListener('click', startApp);
+        window.addEventListener('keydown', startApp);
+
     } catch (error) {
         console.error("アセットの読み込み中にエラーが発生しました:", error);
         const loadingText = document.querySelector('#loading p');
