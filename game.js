@@ -1337,11 +1337,15 @@ function setCurrentState(newState) {
         case gameState.TITLE:
             assets.currentTitleCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             playRandomNormalBgm();
+            ultGauge = 0;
+            ultReady = false;
+            purpleFlashTimer = 0;
             break;
         case gameState.GAMEOVER:
             assets.currentGameoverCutin = assets.cutins[Math.floor(Math.random() * assets.cutins.length)];
             stopAllBgm();
             playRandomBossBgm();
+            purpleFlashTimer = 0;
             break;
         case gameState.CLEAR:
             playRandomNormalBgm();
@@ -1355,6 +1359,7 @@ function setCurrentState(newState) {
             document.getElementById('ultPenalty').textContent = `ULT Penalty: -${scores.ultPenalty}`;
             document.getElementById('finalScore').textContent = `Final Score: ${scores.finalScore}`;
             clearScreen.style.display = 'flex';
+            purpleFlashTimer = 0;
             break;
     }
 }
