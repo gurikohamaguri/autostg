@@ -251,7 +251,7 @@ class Player {
     }
 
     updateHitbox() {
-        const hitboxSize = this.width * 0.3; // Make hitbox 30% of the player image size
+        const hitboxSize = this.width * 0.4; // Make hitbox 40% of the player image size
         this.hitbox.width = hitboxSize;
         this.hitbox.height = hitboxSize;
         this.hitbox.x = this.x + (this.width - hitboxSize) / 2;
@@ -618,6 +618,24 @@ class Boss {
         ctx.fillRect(barX, barY, (this.health / this.maxHealth) * barWidth, barHeight);
         ctx.strokeStyle = '#fff';
         ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+        // Draw timers
+        ctx.font = `${scaleValue(30)}px "MS Gothic"`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const timerY = barY + barHeight + scaleValue(20); // Position below the bar
+        const timerX = barX + barWidth + scaleValue(20);
+
+        if (bossEnrageTimer > 0) {
+            ctx.fillStyle = 'white';
+            ctx.fillText(`Penalty: ${Math.ceil(bossEnrageTimer / 60)}`, timerX, timerY);
+        } else if (frenzyModeTimer > 0) {
+            ctx.fillStyle = 'yellow';
+            ctx.fillText(`Penalty: ${Math.ceil(frenzyModeTimer / 60)}`, timerX, timerY);
+        } else if (isBossEnraged && bossEnragePenaltyTimer > 0) {
+            ctx.fillStyle = 'magenta';
+            ctx.fillText(`Penalty: ${Math.ceil(bossEnragePenaltyTimer / 60)}`, timerX, timerY);
+        }    
     }
 
     shoot() {
@@ -1264,21 +1282,6 @@ function drawGameScreen() {
     enemies.forEach(e => e.draw());
     if (boss) boss.draw();
     enemyBullets.forEach(b => b.draw());
-
-    // Draw timers
-    ctx.font = `${scaleValue(30)}px "MS Gothic"`;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    const hpBarRightX = canvas.width / 2 + scaleValue(200);
-    const timerY = scaleValue(30);
-
-    if (bossEnrageTimer > 0) {
-        ctx.fillStyle = 'white';
-        ctx.fillText(`CountDown: ${Math.ceil(bossEnrageTimer / 60)}`, hpBarRightX + scaleValue(20), timerY);
-    } else if (isBossEnraged && bossEnragePenaltyTimer > 0) {
-        ctx.fillStyle = 'magenta';
-        ctx.fillText(`Penalty: ${Math.ceil(bossEnragePenaltyTimer / 60)}`, hpBarRightX + scaleValue(20), timerY);
-    }
 }
 
 function drawPausedScreen() {
