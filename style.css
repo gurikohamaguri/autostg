@@ -118,8 +118,8 @@ canvas {
 #ultButton {
     display: none; /* PCでは非表示 */
     position: fixed;
-    right: 3vw;
-    bottom: 3vh;
+    right: 40vw;
+    bottom: 5vh;
     width: 12vmin;
     height: 12vmin;
     background-color: rgba(255, 223, 0, 0.7); /* ゴールドっぽい色 */

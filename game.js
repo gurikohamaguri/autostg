@@ -1361,6 +1361,11 @@ function drawUltCutinScreen() {
 
 // --- ゲームループ ---
 function gameLoop() {
+    if (orientationOverlay && orientationOverlay.style.display === 'flex') {
+        // 縦向きオーバーレイ表示中はゲームを停止
+        requestAnimationFrame(gameLoop);
+        return;
+    }
     update();
     draw();
     requestAnimationFrame(gameLoop);
@@ -1727,8 +1732,12 @@ window.addEventListener('DOMContentLoaded', () => {
         checkOrientation();
     });
 
-    checkOrientation();
     recalculateScaling();
+    checkOrientation();
+    setTimeout(() => {
+        recalculateScaling();
+        checkOrientation();
+    }, 500);
     loadAssets().catch(error => {
         console.error("Failed to load assets:", error);
         const loadingText = document.querySelector('#loading p');
@@ -1739,4 +1748,12 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     requestAnimationFrame(gameLoop);
+
+    window.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (currentState === gameState.PLAYING) {
+                setCurrentState(gameState.PAUSED);
+            }
+        }
+    });
 });
