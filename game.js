@@ -1,126 +1,92 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const endingVideo = document.getElementById('endingVideo');
-const clearScreen = document.getElementById('clearScreen');
-const finalScoreEl = document.getElementById('finalScore');
-const playEndingBtn = document.getElementById('playEndingBtn');
-const backToTitleBtn = document.getElementById('backToTitleBtn');
-const ultButton = document.getElementById('ultButton');
-const loading = document.getElementById('loading');
-const reloadButton = document.getElementById('reloadButton');
-const exitButton = document.getElementById('exitButton');
-const orientationOverlay = document.getElementById('orientation-overlay');
-const pauseButton = document.getElementById('pauseButton');
-const scoreEl = document.getElementById('score');
-const lifeEl = document.getElementById('life');
-const ultGaugeBarEl = document.getElementById('ultGaugeBar');
-const pngtuberContainer = document.getElementById('pngtuberContainer');
-const gameUiContainer = document.getElementById('gameUiContainer');
-const voiceMuteButton = document.getElementById('voiceMuteButton');
+let canvas, ctx, endingVideo, clearScreen, finalScoreEl, playEndingBtn, backToTitleBtn, ultButton, loading, reloadButton, exitButton, orientationOverlay, pauseButton, scoreEl, lifeEl, ultGaugeBarEl, pngtuberContainer, gameUiContainer, voiceMuteButton, audioControlsContainer, audioControls;
 
 let isVoiceMuted = false;
 let lastVolume = 0.2;
 let isMutedByPause = false;
 
-if (reloadButton) {
-    reloadButton.addEventListener('click', () => location.reload());
-}
-if (exitButton) {
-    exitButton.addEventListener('click', () => {
-        backToTitle();
-    });
-}
-
 // --- レスポンシブ対応 ---
 const referenceHeight = 900; // 基準となる画面の高さ
 let scale = 1;
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-scale = canvas.height / referenceHeight;
+let isMobile = false;
 
 function recalculateScaling() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    scale = canvas.height / referenceHeight;
-    calculatePngTuberSize();
-    adjustUiForMobile();
+    const screenHeight = window.innerHeight;
+    const screenWidth = window.innerWidth;
+    scale = screenHeight / referenceHeight;
+    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (canvas) {
+        canvas.width = screenWidth;
+        canvas.height = screenHeight;
+    }
+
+    // UI要素のスケーリング
+    const gameUiContainer = document.getElementById('gameUiContainer');
+    const pngtuberContainer = document.getElementById('pngtuberContainer');
+    const ultButton = document.getElementById('ultButton');
+
+    if (isMobile) {
+        if (gameUiContainer) gameUiContainer.style.display = 'flex';
+        if (ultButton) ultButton.style.display = 'block';
+        if (pngtuberContainer) {
+            const size = Math.min(screenWidth, screenHeight) * 0.25;
+            pngtuberContainer.style.width = `${size}px`;
+            pngtuberContainer.style.height = `${size}px`;
+        }
+    } else {
+        if (gameUiContainer) gameUiContainer.style.display = 'flex';
+        if (ultButton) ultButton.style.display = 'none';
+        if (pngtuberContainer) {
+            const size = screenHeight * 0.3;
+            pngtuberContainer.style.width = `${size}px`;
+            pngtuberContainer.style.height = `${size}px`;
+        }
+    }
 }
 
 function scaleValue(value) {
     return value * scale;
 }
 
-// --- スマホ・タッチ操作判定 ---
-const isMobile = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+function checkOrientation() {
+    const orientationOverlay = document.getElementById('orientation-overlay');
+    if (!orientationOverlay) return;
 
-let pngtuberSize;
-function calculatePngTuberSize() {
-    const isLandscape = window.innerWidth > window.innerHeight;
-    if (isMobile) {
-        // スマホなら画面の高さの25%
-        pngtuberSize = window.innerHeight * 0.25;
+    if (isMobile && window.innerHeight > window.innerWidth) {
+        // 縦向きの場合
+        orientationOverlay.style.display = 'flex';
     } else {
-        // PCなら画面の高さの30%
-        pngtuberSize = window.innerHeight * 0.3;
-    }
-    // ただし、横長画面の場合は幅を取りすぎないように、画面幅の20%を上限とする
-    if (isLandscape) {
-        pngtuberSize = Math.min(pngtuberSize, window.innerWidth * 0.2);
-    }
-    pngtuberContainer.style.height = `${pngtuberSize}px`;
-    pngtuberContainer.style.width = `${pngtuberSize}px`;
-}
-
-function adjustUiForMobile() {
-    if (isMobile) {
-        const uiContainerRight = 2; // vw
-        const uiContainerBottom = 2; // vh
-        const buttonMargin = 2; // vw
-
-        gameUiContainer.style.right = `${uiContainerRight}vw`;
-        gameUiContainer.style.bottom = `${uiContainerBottom}vh`;
-
-        const pngtuberWidthVW = (pngtuberSize / window.innerWidth) * 100;
-        const ultButtonRight = uiContainerRight + pngtuberWidthVW + buttonMargin;
-
-        ultButton.style.right = `${ultButtonRight}vw`;
+        // 横向きの場合
+        orientationOverlay.style.display = 'none';
     }
 }
-
-calculatePngTuberSize();
-adjustUiForMobile();
-
-// --- オーディオコントロール ---
-const audioControlsContainer = document.getElementById('audioControls');
-const audioControls = {
-    muteButton: document.getElementById('muteButton'),
-    volumeSlider: document.getElementById('volumeSlider'),
-};
 
 // --- アセットのパス ---
 const assetPaths = {
     player: [
-        'assets/f/f_33.png', 'assets/f/f_24.png', 'assets/f/f_20.png', 'assets/f/f_8.png', 'assets/f/f_6.png', 'assets/f/f_3.png', 'assets/f/f64.png', 'assets/f/f63.png', 'assets/f/f62.png', 'assets/f/f61.png', 'assets/f/f60.png', 'assets/f/f58.png', 'assets/f/F_55.png', 'assets/f/f56.png', 'assets/f/f59.png', 'assets/f/F_54.png', 'assets/f/f_51.png', 'assets/f/f55.png', 'assets/f/f57.png', 'assets/f/f65.png', 'assets/f/f_52.png', 'assets/f/F_53.png', 'assets/f/f_0.png', 'assets/f/f_1.png', 'assets/f/f_10.png', 'assets/f/f_13.png', 'assets/f/f_14.png', 'assets/f/f_15.png', 'assets/f/f_16.png', 'assets/f/f_17.png', 'assets/f/f_18.png', 'assets/f/f_19.png', 'assets/f/f_2.png', 'assets/f/f_21.png', 'assets/f/f_22.png', 'assets/f/f_23.png', 'assets/f/f_25.png', 'assets/f/f_26.png', 'assets/f/f_27.png', 'assets/f/f_28.png', 'assets/f/f_29.png', 'assets/f/f_30.png', 'assets/f/f_31.png', 'assets/f/f_32.png', 'assets/f/f_34.png', 'assets/f/f_35.png', 'assets/f/f_36.png', 'assets/f/f_37.png', 'assets/f/f_38.png', 'assets/f/f_39.png', 'assets/f/f_4.png', 'assets/f/f_40.png', 'assets/f/f_41.png', 'assets/f/f_42.png', 'assets/f/f_43.png', 'assets/f/f_44.png', 'assets/f/f_45.png', 'assets/f/f_46.png', 'assets/f/f_47.png', 'assets/f/f_48.png', 'assets/f/f_49.png', 'assets/f/f_5.png', 'assets/f/f_50.png', 'assets/f/f_7.png', 'assets/f/f_9.png'
+        'assets/f/F_53.png', 'assets/f/F_54.png', 'assets/f/F_55.png', 'assets/f/f55.png', 'assets/f/f56.png', 'assets/f/f57.png', 'assets/f/f58.png', 'assets/f/f59.png', 'assets/f/f60.png', 'assets/f/f61.png', 'assets/f/f62.png', 'assets/f/f63.png', 'assets/f/f64.png', 'assets/f/f65.png', 'assets/f/f_0.png', 'assets/f/f_1.png', 'assets/f/f_10.png', 'assets/f/f_13.png', 'assets/f/f_14.png', 'assets/f/f_15.png', 'assets/f/f_16.png', 'assets/f/f_17.png', 'assets/f/f_18.png', 'assets/f/f_19.png', 'assets/f/f_2.png', 'assets/f/f_20.png', 'assets/f/f_21.png', 'assets/f/f_22.png', 'assets/f/f_23.png', 'assets/f/f_25.png', 'assets/f/f_26.png', 'assets/f/f_27.png', 'assets/f/f_28.png', 'assets/f/f_3.png', 'assets/f/f_30.png', 'assets/f/f_31.png', 'assets/f/f_32.png', 'assets/f/f_33.png', 'assets/f/f_34.png', 'assets/f/f_35.png', 'assets/f/f_36.png', 'assets/f/f_37.png', 'assets/f/f_38.png', 'assets/f/f_40.png', 'assets/f/f_41.png', 'assets/f/f_42.png', 'assets/f/f_43.png', 'assets/f/f_45.png', 'assets/f/f_46.png', 'assets/f/f_48.png', 'assets/f/f_49.png', 'assets/f/f_5.png', 'assets/f/f_51.png', 'assets/f/f_52.png', 'assets/f/f_6.png', 'assets/f/f_7.png', 'assets/f/f_9.png'
     ],
     enemies: [
-        'assets/e/e71.png', 'assets/e/e67.png', 'assets/e/e68.png', 'assets/e/e69.png', 'assets/e/e70.png', 'assets/e/e72.png', 'assets/e/e-66.png', 'assets/e/e_10.png', 'assets/e/e_11.png', 'assets/e/e_12.png', 'assets/e/e_13.png', 'assets/e/e_14.png', 'assets/e/e_15.png', 'assets/e/e_16.png', 'assets/e/e_17.png', 'assets/e/e_18.png', 'assets/e/e_19.png', 'assets/e/e_20.png', 'assets/e/e_21.png', 'assets/e/e_22.png', 'assets/e/e_23.png', 'assets/e/e_24.png', 'assets/e/e_25.png', 'assets/e/e_26.png', 'assets/e/e_27.png', 'assets/e/e_29.png', 'assets/e/e_30.png', 'assets/e/e_31.png', 'assets/e/e_32.png', 'assets/e/e_33.png', 'assets/e/e_36.png', 'assets/e/e_37.png', 'assets/e/e_39.png', 'assets/e/e_4.png', 'assets/e/e_40.png', 'assets/e/e_41.png', 'assets/e/e_42.png', 'assets/e/e_43.png', 'assets/e/e_44.png', 'assets/e/e_45.png', 'assets/e/e_47.png', 'assets/e/e_48.png', 'assets/e/e_49.png', 'assets/e/e_5.png', 'assets/e/e_50.png', 'assets/e/e_51.png', 'assets/e/e_53.png', 'assets/e/e_54.png', 'assets/e/e_55.png', 'assets/e/e_56.png', 'assets/e/e_57.png', 'assets/e/e_58.png', 'assets/e/e_59.png', 'assets/e/e_6.png', 'assets/e/e_60.png', 'assets/e/e_61.png', 'assets/e/e_62.png', 'assets/e/e_63.png', 'assets/e/e_64.png', 'assets/e/e_65.png', 'assets/e/e_8.png', 'assets/e/e_9.png'
+        'assets/e/e-66.png', 'assets/e/e67.png', 'assets/e/e68.png', 'assets/e/e69.png', 'assets/e/e70.png', 'assets/e/e71.png', 'assets/e/e72.png', 'assets/e/e73.png', 'assets/e/e74.png', 'assets/e/e_10.png', 'assets/e/e_11.png', 'assets/e/e_12.png', 'assets/e/e_13.png', 'assets/e/e_14.png', 'assets/e/e_16.png', 'assets/e/e_17.png', 'assets/e/e_18.png', 'assets/e/e_19.png', 'assets/e/e_20.png', 'assets/e/e_21.png', 'assets/e/e_22.png', 'assets/e/e_23.png', 'assets/e/e_24.png', 'assets/e/e_25.png', 'assets/e/e_26.png', 'assets/e/e_27.png', 'assets/e/e_29.png', 'assets/e/e_30.png', 'assets/e/e_31.png', 'assets/e/e_32.png', 'assets/e/e_33.png', 'assets/e/e_36.png', 'assets/e/e_37.png', 'assets/e/e_39.png', 'assets/e/e_4.png', 'assets/e/e_40.png', 'assets/e/e_41.png', 'assets/e/e_42.png', 'assets/e/e_43.png', 'assets/e/e_44.png', 'assets/e/e_45.png', 'assets/e/e_47.png', 'assets/e/e_48.png', 'assets/e/e_49.png', 'assets/e/e_5.png', 'assets/e/e_50.png', 'assets/e/e_51.png', 'assets/e/e_53.png', 'assets/e/e_54.png', 'assets/e/e_55.png', 'assets/e/e_56.png', 'assets/e/e_57.png', 'assets/e/e_58.png', 'assets/e/e_59.png', 'assets/e/e_6.png', 'assets/e/e_60.png', 'assets/e/e_61.png', 'assets/e/e_62.png', 'assets/e/e_63.png', 'assets/e/e_64.png', 'assets/e/e_65.png', 'assets/e/e_8.png', 'assets/e/e_9.png'
     ],
     bosses: [
-        'assets/b/b_0.png', 'assets/b/b_1.png', 'assets/b/b_2.png', 'assets/b/b_3.png', 'assets/b/b_4.png', 'assets/b/b_5.png'
+        'assets/b/b10.png', 'assets/b/b11.png', 'assets/b/b12.png', 'assets/b/b13.png', 'assets/b/b14.png', 'assets/b/b15.png', 'assets/b/b16.png', 'assets/b/b17.png', 'assets/b/b18.png', 'assets/b/b19.png', 'assets/b/b20.png', 'assets/b/b21.png', 'assets/b/b22.png', 'assets/b/b23.png', 'assets/b/b24.png', 'assets/b/b25.png', 'assets/b/b6.png', 'assets/b/b7.png', 'assets/b/b8.png', 'assets/b/b9.png', 'assets/b/b_0.png', 'assets/b/b_1.png', 'assets/b/b_2.png', 'assets/b/b_3.png', 'assets/b/b_4.png', 'assets/b/b_5.png'
     ],
     backgrounds: [
-        'assets/bg/bg_0.jpg', 'assets/bg/bg_1.jpg', 'assets/bg/bg_10.png', 'assets/bg/bg_100.png', 'assets/bg/bg_101.png', 'assets/bg/bg_102.png', 'assets/bg/bg_11.png', 'assets/bg/bg_12.png', 'assets/bg/bg_13.png', 'assets/bg/bg_14.png', 'assets/bg/bg_15.jpg', 'assets/bg/bg_16.png', 'assets/bg/bg_17.png', 'assets/bg/bg_18.png', 'assets/bg/bg_19.png', 'assets/bg/bg_2.png', 'assets/bg/bg_20.png', 'assets/bg/bg_21.png', 'assets/bg/bg_22.png', 'assets/bg/bg_23.png', 'assets/bg/bg_24.png', 'assets/bg/bg_25.png', 'assets/bg/bg_26.jpg', 'assets/bg/bg_26.png', 'assets/bg/bg_27.png', 'assets/bg/bg_28.png', 'assets/bg/bg_29.png', 'assets/bg/bg_3.png', 'assets/bg/bg_30.png', 'assets/bg/bg_31.png', 'assets/bg/bg_32.png', 'assets/bg/bg_33.png', 'assets/bg/bg_34.png', 'assets/bg/bg_35.png', 'assets/bg/bg_36.png', 'assets/bg/bg_37.png', 'assets/bg/bg_38.png', 'assets/bg/bg_39.png', 'assets/bg/bg_4.png', 'assets/bg/bg_40.png', 'assets/bg/bg_41.png', 'assets/bg/bg_42.png', 'assets/bg/bg_43.png', 'assets/bg/bg_44.png', 'assets/bg/bg_45.png', 'assets/bg/bg_46.png', 'assets/bg/bg_47.png', 'assets/bg/bg_48.png', 'assets/bg/bg_49.png', 'assets/bg/bg_5.png', 'assets/bg/bg_50.png', 'assets/bg/bg_51.png', 'assets/bg/bg_52.png', 'assets/bg/bg_53.png', 'assets/bg/bg_54.png', 'assets/bg/bg_55.png', 'assets/bg/bg_56.png', 'assets/bg/bg_57.png', 'assets/bg/bg_58.png', 'assets/bg/bg_59.png', 'assets/bg/bg_6.png', 'assets/bg/bg_60.png', 'assets/bg/bg_61.png', 'assets/bg/bg_62.png', 'assets/bg/bg_63.png', 'assets/bg/bg_64.png', 'assets/bg/bg_65.png', 'assets/bg/bg_66.png', 'assets/bg/bg_67.png', 'assets/bg/bg_68.png', 'assets/bg/bg_69.png', 'assets/bg/bg_7.png', 'assets/bg/bg_70.png', 'assets/bg/bg_71.png', 'assets/bg/bg_72.png', 'assets/bg/bg_73.png', 'assets/bg/bg_74.png', 'assets/bg/bg_75.png', 'assets/bg/bg_76.png', 'assets/bg/bg_77.png', 'assets/bg/bg_78.png', 'assets/bg/bg_79.png', 'assets/bg/bg_8.png', 'assets/bg/bg_80.png', 'assets/bg/bg_81.png', 'assets/bg/bg_82.png', 'assets/bg/bg_83.png', 'assets/bg/bg_84.png', 'assets/bg/bg_85.png', 'assets/bg/bg_86.png', 'assets/bg/bg_87.png', 'assets/bg/bg_88.png', 'assets/bg/bg_89.png', 'assets/bg/bg_9.png', 'assets/bg/bg_90.png', 'assets/bg/bg_91.png', 'assets/bg/bg_92.png', 'assets/bg/bg_93.png', 'assets/bg/bg_94.png', 'assets/bg/bg_95.png', 'assets/bg/bg_96.png', 'assets/bg/bg_98.png', 'assets/bg/bg_99.png'
+        'assets/bg/bg_0.jpg', 'assets/bg/bg_1.jpg', 'assets/bg/bg_10.png', 'assets/bg/bg_100.png', 'assets/bg/bg_101.png', 'assets/bg/bg_102.png', 'assets/bg/bg_18.png', 'assets/bg/bg_19.png', 'assets/bg/bg_20.png', 'assets/bg/bg_21.png', 'assets/bg/bg_22.png', 'assets/bg/bg_23.png', 'assets/bg/bg_24.png', 'assets/bg/bg_25.png', 'assets/bg/bg_26.jpg', 'assets/bg/bg_26.png', 'assets/bg/bg_27.png', 'assets/bg/bg_28.png', 'assets/bg/bg_29.png', 'assets/bg/bg_3.png', 'assets/bg/bg_30.png', 'assets/bg/bg_33.png', 'assets/bg/bg_34.png', 'assets/bg/bg_35.png', 'assets/bg/bg_36.png', 'assets/bg/bg_37.png', 'assets/bg/bg_39.png', 'assets/bg/bg_4.png', 'assets/bg/bg_40.png', 'assets/bg/bg_41.png', 'assets/bg/bg_42.png', 'assets/bg/bg_43.png', 'assets/bg/bg_44.png', 'assets/bg/bg_45.png', 'assets/bg/bg_46.png', 'assets/bg/bg_47.png', 'assets/bg/bg_48.png', 'assets/bg/bg_49.png', 'assets/bg/bg_5.png', 'assets/bg/bg_50.png', 'assets/bg/bg_51.png', 'assets/bg/bg_52.png', 'assets/bg/bg_53.png', 'assets/bg/bg_55.png', 'assets/bg/bg_56.png', 'assets/bg/bg_57.png', 'assets/bg/bg_58.png', 'assets/bg/bg_59.png', 'assets/bg/bg_6.png', 'assets/bg/bg_60.png', 'assets/bg/bg_61.png', 'assets/bg/bg_62.png', 'assets/bg/bg_63.png', 'assets/bg/bg_65.png', 'assets/bg/bg_66.png', 'assets/bg/bg_67.png', 'assets/bg/bg_68.png', 'assets/bg/bg_69.png', 'assets/bg/bg_7.png', 'assets/bg/bg_71.png', 'assets/bg/bg_72.png', 'assets/bg/bg_73.png', 'assets/bg/bg_74.png', 'assets/bg/bg_76.png', 'assets/bg/bg_77.png', 'assets/bg/bg_78.png', 'assets/bg/bg_79.png', 'assets/bg/bg_80.png', 'assets/bg/bg_81.png', 'assets/bg/bg_82.png', 'assets/bg/bg_83.png', 'assets/bg/bg_84.png', 'assets/bg/bg_85.png', 'assets/bg/bg_86.png', 'assets/bg/bg_87.png', 'assets/bg/bg_88.png', 'assets/bg/bg_89.png', 'assets/bg/bg_90.png', 'assets/bg/bg_91.png', 'assets/bg/bg_92.png', 'assets/bg/bg_93.png', 'assets/bg/bg_94.png', 'assets/bg/bg_95.png', 'assets/bg/bg_96.png', 'assets/bg/bg_99.png'
+    ],
+    bossBackgrounds: [
+        'assets/bg/bbg/bbg_13.png', 'assets/bg/bbg/bbg_14.png', 'assets/bg/bbg/bbg_15.jpg', 'assets/bg/bbg/bbg_16.png', 'assets/bg/bbg/bbg_17.png', 'assets/bg/bbg/bbg_2.png', 'assets/bg/bbg/bbg_31.png', 'assets/bg/bbg/bbg_32.png', 'assets/bg/bbg/bbg_38.png', 'assets/bg/bbg/bbg_54.png', 'assets/bg/bbg/bbg_70.png', 'assets/bg/bbg/bbg_75.png', 'assets/bg/bbg/bbg_8.png', 'assets/bg/bbg/bbg_9.png', 'assets/bg/bbg/bbg_98.png'
     ],
     cutins: [
-        'assets/c/c_0.png', 'assets/c/c_1.png', 'assets/c/c_11.png', 'assets/c/c_12.png', 'assets/c/c_13.png', 'assets/c/c_14.png', 'assets/c/c_15.png', 'assets/c/c_16.png', 'assets/c/c_17.png', 'assets/c/c_19.png', 'assets/c/c_2.png', 'assets/c/c_20.png', 'assets/c/c_21.png', 'assets/c/c_3.png', 'assets/c/c_4.png', 'assets/c/c_5.png', 'assets/c/c_7.png', 'assets/c/c_9.png', 'assets/c/c22.png', 'assets/c/c24.png', 'assets/c/c30.png', 'assets/c/c31.png', 'assets/c/c33.png', 'assets/c/c34.png', 'assets/c/c35.png', 'assets/c/c36.png', 'assets/c/c37.png', 'assets/c/c38.png', 'assets/c/c39.png', 'assets/c/c40.png', 'assets/c/c41.png', 'assets/c/c42.png', 'assets/c/c43.png', 'assets/c/c45.png', 'assets/c/c46.png', 'assets/c/c47.png', 'assets/c/c48.png', 'assets/c/c49.png', 'assets/c/c50.png', 'assets/c/c51.png', 'assets/c/c52.png', 'assets/c/c53.png', 'assets/c/c54.png', 'assets/c/c55.png', 'assets/c/c56.png', 'assets/c/c57.png', 'assets/c/c58.png', 'assets/c/c59.png', 'assets/c/c60.png', 'assets/c/c61.png', 'assets/c/c62.png', 'assets/c/c63.png', 'assets/c/c64.png', 'assets/c/c65.png', 'assets/c/c66.png'
+        'assets/c/c22.png', 'assets/c/c24.png', 'assets/c/c30.png', 'assets/c/c31.png', 'assets/c/c33.png', 'assets/c/c34.png', 'assets/c/c35.png', 'assets/c/c36.png', 'assets/c/c37.png', 'assets/c/c38.png', 'assets/c/c39.png', 'assets/c/c40.png', 'assets/c/c41.png', 'assets/c/c42.png', 'assets/c/c43.png', 'assets/c/c45.png', 'assets/c/c46.png', 'assets/c/c47.png', 'assets/c/c48.png', 'assets/c/c49.png', 'assets/c/c50.png', 'assets/c/c51.png', 'assets/c/c52.png', 'assets/c/c53.png', 'assets/c/c54.png', 'assets/c/c55.png', 'assets/c/c56.png', 'assets/c/c57.png', 'assets/c/c58.png', 'assets/c/c59.png', 'assets/c/c60.png', 'assets/c/c61.png', 'assets/c/c62.png', 'assets/c/c63.png', 'assets/c/c64.png', 'assets/c/c65.png', 'assets/c/c66.png', 'assets/c/c_0.png', 'assets/c/c_1.png', 'assets/c/c_11.png', 'assets/c/c_12.png', 'assets/c/c_13.png', 'assets/c/c_14.png', 'assets/c/c_15.png', 'assets/c/c_16.png', 'assets/c/c_17.png', 'assets/c/c_19.png', 'assets/c/c_2.png', 'assets/c/c_20.png', 'assets/c/c_21.png', 'assets/c/c_3.png', 'assets/c/c_4.png', 'assets/c/c_5.png', 'assets/c/c_7.png', 'assets/c/c_9.png'
     ],
     bgm: {
         normal: [
-            'assets/bgm/normal/bgm_1.mp3', 'assets/bgm/normal/bgm_10.mp3', 'assets/bgm/normal/bgm_12.mp3', 'assets/bgm/normal/bgm_15.mp3', 'assets/bgm/normal/bgm_16.mp3', 'assets/bgm/normal/bgm_17.mp3', 'assets/bgm/normal/bgm_2.mp3', 'assets/bgm/normal/bgm_21.mp3', 'assets/bgm/normal/bgm_25.mp3', 'assets/bgm/normal/bgm_28.mp3', 'assets/bgm/normal/bgm_29.mp3', 'assets/bgm/normal/bgm_30.mp3', 'assets/bgm/normal/bgm_31.mp3', 'assets/bgm/normal/bgm_33.mp3', 'assets/bgm/normal/bgm_38.mp3', 'assets/bgm/normal/bgm_39.mp3', 'assets/bgm/normal/bgm_4.mp3', 'assets/bgm/normal/bgm_43.mp3', 'assets/bgm/normal/bgm_45.mp3', 'assets/bgm/normal/bgm_50.mp3', 'assets/bgm/normal/bgm_51.mp3', 'assets/bgm/normal/bgm_52.mp3', 'assets/bgm/normal/bgm_7.mp3', 'assets/bgm/normal/bgm_8.mp3', 'assets/bgm/normal/bgm_9.mp3'
+            'assets/bgm/normal/bgm53.mp3', 'assets/bgm/normal/bgm6.mp3', 'assets/bgm/normal/bgm_1.mp3', 'assets/bgm/normal/bgm_10.mp3', 'assets/bgm/normal/bgm_11.mp3', 'assets/bgm/normal/bgm_12.mp3', 'assets/bgm/normal/bgm_13.mp3', 'assets/bgm/normal/bgm_15.mp3', 'assets/bgm/normal/bgm_16.mp3', 'assets/bgm/normal/bgm_17.mp3', 'assets/bgm/normal/bgm_2.mp3', 'assets/bgm/normal/bgm_21.mp3', 'assets/bgm/normal/bgm_29.mp3', 'assets/bgm/normal/bgm_3.mp3', 'assets/bgm/normal/bgm_31.mp3', 'assets/bgm/normal/bgm_33.mp3', 'assets/bgm/normal/bgm_4.mp3', 'assets/bgm/normal/bgm_45.mp3', 'assets/bgm/normal/bgm_5.mp3', 'assets/bgm/normal/bgm_50.mp3', 'assets/bgm/normal/bgm_51.mp3', 'assets/bgm/normal/bgm_52.mp3', 'assets/bgm/normal/bgm_7.mp3', 'assets/bgm/normal/bgm_8.mp3', 'assets/bgm/normal/bgm_9.mp3'
         ],
         boss: [
-            'assets/bgm/boss/bbgm_18.mp3', 'assets/bgm/boss/bbgm_19.mp3', 'assets/bgm/boss/bbgm_20.mp3', 'assets/bgm/boss/bbgm_22.mp3', 'assets/bgm/boss/bbgm_23.mp3', 'assets/bgm/boss/bbgm_26.mp3', 'assets/bgm/boss/bbgm_44.mp3', 'assets/bgm/boss/bbgm_46.mp3', 'assets/bgm/boss/bbgm_47.mp3', 'assets/bgm/boss/bbgm_48.mp3', 'assets/bgm/boss/bbgm_49.mp3'
+            'assets/bgm/boss/bbgm1.mp3', 'assets/bgm/boss/bbgm3.mp3', 'assets/bgm/boss/bbgm4.mp3', 'assets/bgm/boss/bbgm_18.mp3', 'assets/bgm/boss/bbgm_19.mp3', 'assets/bgm/boss/bbgm_20.mp3', 'assets/bgm/boss/bbgm_22.mp3', 'assets/bgm/boss/bbgm_23.mp3', 'assets/bgm/boss/bbgm_26.mp3', 'assets/bgm/boss/bbgm_44.mp3', 'assets/bgm/boss/bbgm_46.mp3', 'assets/bgm/boss/bbgm_47.mp3', 'assets/bgm/boss/bbgm_48.mp3', 'assets/bgm/boss/bbgm_49.mp3', 'assets/bgm/boss/bbgn2.mp3'
         ]
     },
     endings: [
@@ -135,17 +101,17 @@ const assetPaths = {
     },
     voices: {
         damage: [
-            'assets/voice/d101.mp3', 'assets/voice/d1101.mp3', 'assets/voice/d2-401.mp3', 'assets/voice/d21.mp3', 'assets/voice/d22.mp3'
+            'assets/voice/d/d101.mp3', 'assets/voice/d/d1101.mp3', 'assets/voice/d/d2-401.mp3', 'assets/voice/d/d21.mp3', 'assets/voice/d/d22.mp3'
         ],
         ult: [
-            'assets/voice/u12-101.mp3', 'assets/voice/u13.mp3', 'assets/voice/u1401.mp3', 'assets/voice/u2-201.mp3', 'assets/voice/u21.mp3', 'assets/voice/u3-101.mp3', 'assets/voice/u41 01.mp3', 'assets/voice/u5101.mp3', 'assets/voice/u6101.mp3', 'assets/voice/u7-101.mp3', 'assets/voice/u7101.mp3', 'assets/voice/u8101.mp3', 'assets/voice/u9-101.mp3', 'assets/voice/u91.mp3', 'assets/voice/u9101.mp3', 'assets/voice/u9201.mp3'
-        ],
+            'assets/voice/ult/u12-101.mp3', 'assets/voice/ult/u13.mp3', 'assets/voice/ult/u1401.mp3', 'assets/voice/ult/u2-201.mp3', 'assets/voice/ult/u21.mp3', 'assets/voice/ult/u3-101.mp3', 'assets/voice/ult/u41_01.mp3', 'assets/voice/ult/u5101.mp3', 'assets/voice/ult/u6101.mp3', 'assets/voice/ult/u7-101.mp3', 'assets/voice/ult/u7101.mp3', 'assets/voice/ult/u8101.mp3', 'assets/voice/ult/u9-101.mp3', 'assets/voice/ult/u91.mp3', 'assets/voice/ult/u9101.mp3', 'assets/voice/ult/u9201.mp3'
+        ]
     }
 };
 
 // --- 読み込んだアセットを格納 ---
 const assets = {
-    player: [], enemies: [], bosses: [], backgrounds: [], cutins: [], bgm: { normal: [], boss: [] }, endings: [],
+    player: [], enemies: [], bosses: [], backgrounds: [], bossBackgrounds: [], cutins: [], bgm: { normal: [], boss: [] }, endings: [],
     pngtuber: { oo: null, oc: null, co: null, cc: null, dd: null },
     voices: { damage: [], ult: [] },
     currentBgm: null,
@@ -192,8 +158,11 @@ let ultReady = false;
 let assetsLoaded = 0;
 let assetsToLoad = 0;
 let ultUsageCount = 0;
+let selectedGameMode = 'Normal'; // 'Normal' or 'VeryNormal'
 let bossEnrageTimer = -1;
 let isBossEnraged = false;
+let frenzyModeTimer = -1;
+let isFrenzyMode = false;
 let bossEnragePenaltyTimer = -1;
 let purpleFlashTimer = 0;
 
@@ -207,13 +176,9 @@ let touchY = null;
 let resumeButtonRect = {};
 let titleButtonRect = {};
 
-window.addEventListener('keydown', (e) => { keys[e.code] = true; });
-window.addEventListener('keyup', (e) => { keys[e.code] = false; });
-window.addEventListener('mousemove', (e) => { 
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-});
-window.addEventListener('contextmenu', (e) => e.preventDefault());
+// --- タイトル画面のボタン定義 ---
+let normalModeButtonRect = {};
+let veryNormalModeButtonRect = {};
 
 
 // --- クラス定義 ---
@@ -281,6 +246,16 @@ class Player {
         this.health = 10;
         this.hitTimer = 0;
         this.damageColor = null;
+        this.hitbox = { x: 0, y: 0, width: 0, height: 0 };
+        this.updateHitbox();
+    }
+
+    updateHitbox() {
+        const hitboxSize = this.width * 0.3; // Make hitbox 30% of the player image size
+        this.hitbox.width = hitboxSize;
+        this.hitbox.height = hitboxSize;
+        this.hitbox.x = this.x + (this.width - hitboxSize) / 2;
+        this.hitbox.y = this.y + (this.height - hitboxSize) / 2;
     }
 
     update() {
@@ -308,6 +283,8 @@ class Player {
         if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
         if (this.y < 0) this.y = 0;
         if (this.y > canvas.height - this.height) this.y = canvas.height - this.height;
+
+        this.updateHitbox();
 
         // 射撃
         if (this.shootCooldown > 0) {
@@ -451,7 +428,7 @@ class Enemy {
             this.hitTimer--;
         }
 
-        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+        const speedMultiplier = getDifficultyMultiplier();
 
         // 移動ロジック
         switch (this.moveType) {
@@ -503,7 +480,7 @@ class Enemy {
     shoot() {
         if (this.bulletType === 'none' || !player) return;
 
-        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+        const speedMultiplier = getDifficultyMultiplier();
         const bulletX = this.x;
         const bulletY = this.y + this.height / 2;
 
@@ -550,6 +527,14 @@ class Enemy {
     }
 }
 
+function addScore(points) {
+    if (selectedGameMode === 'VeryNormal') {
+        score += points * 2;
+    } else {
+        score += points;
+    }
+}
+
 class Boss {
     constructor() {
         if (isMobile) {
@@ -578,7 +563,7 @@ class Boss {
             this.hitTimer--;
         }
 
-        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+        const speedMultiplier = getDifficultyMultiplier();
 
         // 初期位置まで移動
         if (this.x > canvas.width - this.width - scaleValue(50)) {
@@ -606,7 +591,7 @@ class Boss {
     }
 
     setShootCooldown() {
-        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+        const speedMultiplier = getDifficultyMultiplier();
         switch (this.attackPhase) {
             case 0: this.shootCooldown = 90 / speedMultiplier; break; // Radial
             case 1: this.shootCooldown = 120 / speedMultiplier; break; // Wide
@@ -636,7 +621,7 @@ class Boss {
     }
 
     shoot() {
-        const speedMultiplier = isBossEnraged ? 1.5 : 1;
+        const speedMultiplier = getDifficultyMultiplier();
         const bulletX = this.x + this.width / 2;
         const bulletY = this.y + this.height / 2;
 
@@ -690,9 +675,9 @@ class Boss {
     takeDamage(amount) {
         this.health -= amount;
         this.hitTimer = 15;
-        score += 50;
+        addScore(50);
         if (this.health <= 0) {
-            score += 5000; // ボス撃破ボーナス
+            addScore(5000); // ボス撃破ボーナス
             setCurrentState(gameState.CLEAR_WHITEOUT);
         }
     }
@@ -705,9 +690,16 @@ function spawnEnemy() {
 function spawnBoss() {
     boss = new Boss();
     playRandomBossBgm();
-    bossEnrageTimer = 60 * 60; // 60秒
-    isBossEnraged = false;
-    bossEnragePenaltyTimer = -1;
+
+    // モードに応じてタイマーを設定
+    if (selectedGameMode === 'VeryNormal') {
+        // isBossEnraged は既にtrueなので、ボスは最初から発狂モード
+        frenzyModeTimer = 60 * 60; // 60秒後に狂乱モードへ
+    } else {
+        bossEnrageTimer = 60 * 60; // 60秒後に発狂モードへ
+    }
+    isFrenzyMode = false; // 念のためリセット
+    bossEnragePenaltyTimer = -1; // ペナルティタイマーをリセット
 }
 
 function enrageBoss() {
@@ -716,10 +708,27 @@ function enrageBoss() {
     playRandomBossBgm();
     let newBg;
     do {
-        newBg = assets.backgrounds[Math.floor(Math.random() * assets.backgrounds.length)];
-    } while (newBg === gameBackground && assets.backgrounds.length > 1);
+        newBg = assets.bossBackgrounds[Math.floor(Math.random() * assets.bossBackgrounds.length)];
+    } while (newBg === gameBackground && assets.bossBackgrounds.length > 1);
     gameBackground = newBg;
     bossEnragePenaltyTimer = 10 * 60; // 10秒
+}
+
+function enrageBossToFrenzy() {
+    isFrenzyMode = true;
+    purpleFlashTimer = 30; // 0.5秒のフラッシュ
+    playRandomBossBgm();
+    let newBg;
+    do {
+        newBg = assets.bossBackgrounds[Math.floor(Math.random() * assets.bossBackgrounds.length)];
+    } while (newBg === gameBackground && assets.bossBackgrounds.length > 1);
+    gameBackground = newBg;
+}
+
+function getDifficultyMultiplier() {
+    if (isFrenzyMode) return 2.25; // 1.5 * 1.5
+    if (isBossEnraged) return 1.5;
+    return 1;
 }
 
 // --- アセット読み込み ---
@@ -764,7 +773,7 @@ function loadAudio(src) {
 }
 
 async function loadAssets() {
-    const imageTypes = ['player', 'enemies', 'bosses', 'backgrounds', 'cutins'];
+    const imageTypes = ['player', 'enemies', 'bosses', 'backgrounds', 'bossBackgrounds', 'cutins'];
     const promises = [];
 
     // Calculate total assets to load
@@ -857,6 +866,12 @@ function initGame() {
     isBossEnraged = false;
     bossEnragePenaltyTimer = -1;
     purpleFlashTimer = 0;
+    isFrenzyMode = false;
+    frenzyModeTimer = -1;
+
+    if (selectedGameMode === 'VeryNormal') {
+        isBossEnraged = true; // 最初から発狂モード
+    }
 }
 
 // --- 当たり判定 ---
@@ -887,7 +902,7 @@ function checkCollisions() {
     // 敵の弾 vs プレイヤー
     for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const bullet = enemyBullets[i];
-        if (isColliding(bullet, player)) {
+        if (isColliding(bullet, player.hitbox)) {
             bullet.active = false;
             player.takeDamage(1);
         }
@@ -896,14 +911,14 @@ function checkCollisions() {
     // プレイヤー vs 敵
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        if (isColliding(player, enemy)) {
+        if (isColliding(player.hitbox, enemy)) {
             enemy.active = false;
             player.takeDamage(3);
         }
     }
     
     // プレイヤー vs ボス
-    if (boss && isColliding(player, boss)) {
+    if (boss && isColliding(player.hitbox, boss)) {
         player.takeDamage(5);
     }
 
@@ -914,18 +929,18 @@ function checkCollisions() {
 }
 
 function isColliding(rect1, rect2) {
-    const margin = 0.7; // 当たり判定を少し厳しく
     return (
-        rect1.x < rect2.x + rect2.width * margin &&
-        rect1.x + rect1.width * margin > rect2.x &&
-        rect1.y < rect2.y + rect2.height * margin &&
-        rect1.y + rect1.height * margin > rect2.y
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
     );
 }
 
 function calculateFinalScore() {
     if (!player) return { finalScore: score, lifeBonus: 0, ultPenalty: 0, baseScore: score };
-    const lifeBonus = player.health * 1000;
+    const lifeBonusMultiplier = selectedGameMode === 'VeryNormal' ? 2 : 1;
+    const lifeBonus = player.health * 1000 * lifeBonusMultiplier;
     const ultPenalty = ultUsageCount * 500;
     const finalScore = score + lifeBonus - ultPenalty;
     return { finalScore, lifeBonus, ultPenalty, baseScore: score };
@@ -992,6 +1007,13 @@ function update() {
             }
         }
 
+        if (frenzyModeTimer > 0) {
+            frenzyModeTimer--;
+            if (frenzyModeTimer === 0) {
+                enrageBossToFrenzy();
+            }
+        }
+
         if (purpleFlashTimer > 0) {
             purpleFlashTimer--;
         }
@@ -1027,7 +1049,7 @@ function update() {
         if (ultCutinTimer > 30) { // 0.5秒間表示
             ultCutinTimer = 0;
             // ULT効果発動
-            score += enemies.length * 100;
+            addScore(enemies.length * 100);
             enemies = [];
             enemyBullets = []; // 敵弾も消去
             ultGauge = 0;
@@ -1149,17 +1171,24 @@ function updateUI() {
     }
 }
 
-function drawControls(yOffset) {
+function drawControls(yOffset, isTitle = false) {
     ctx.font = `${scaleValue(20)}px "Meiryo"`;
     ctx.textAlign = 'center';
+    ctx.fillStyle = isTitle ? '#ccc' : '#fff';
+
+    const lineHeight = scaleValue(30);
+    let line = 0;
+
     if (isMobile) {
-        ctx.fillText('スワイプ: 移動', canvas.width / 2, yOffset);
-        ctx.fillText('自動で攻撃します', canvas.width / 2, yOffset + scaleValue(30));
+        ctx.fillText('スワイプ: 移動', canvas.width / 2, yOffset + (line++ * lineHeight));
+        ctx.fillText('オートショット', canvas.width / 2, yOffset + (line++ * lineHeight));
     } else {
-        ctx.fillText('WASD/矢印: 移動', canvas.width / 2, yOffset);
-        ctx.fillText('スペース/左クリック: 攻撃', canvas.width / 2, yOffset + scaleValue(30));
-        ctx.fillText('Shift/右クリック: ULT', canvas.width / 2, yOffset + scaleValue(60));
-        ctx.fillText('ESC: 一時停止', canvas.width / 2, yOffset + scaleValue(90));
+        ctx.fillText('WASD/矢印: 移動', canvas.width / 2, yOffset + (line++ * lineHeight));
+        ctx.fillText('クリック/スペース: ショット', canvas.width / 2, yOffset + (line++ * lineHeight));
+    }
+    ctx.fillText('ULT: ボタンクリック', canvas.width / 2, yOffset + (line++ * lineHeight));
+    if (!isMobile) {
+        ctx.fillText('ESC: 一時停止', canvas.width / 2, yOffset + (line++ * lineHeight));
     }
 }
 
@@ -1174,28 +1203,57 @@ function drawLoadingScreen() {
     } else {
         ctx.fillText('Now Loading...', canvas.width / 2, canvas.height / 2 - scaleValue(50));
     }
-    drawControls(canvas.height / 2 + scaleValue(50));
 }
 
 function drawTitleScreen() {
+    // 背景
     if (assets.currentTitleCutin) {
         drawImageWithAspectRatio(assets.currentTitleCutin, 0, 0, canvas.width, canvas.height);
-    }
-    else {
+    } else {
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(0, canvas.height / 2 - scaleValue(60), canvas.width, scaleValue(260));
+    // タイトル
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
     ctx.font = `bold ${scaleValue(50)}px "Meiryo"`;
     ctx.textAlign = 'center';
-    ctx.fillText('えいえんのアサリガール', canvas.width / 2, canvas.height / 2);
-    ctx.font = `${scaleValue(24)}px "Meiryo"`;
-    ctx.fillText(isMobile ? 'Tap to Start' : 'Click to Start', canvas.width / 2, canvas.height / 2 + scaleValue(60));
+    ctx.textBaseline = 'middle';
+    ctx.fillText('えいえんのアサリガール', canvas.width / 2, canvas.height * 0.2);
 
-    drawControls(canvas.height / 2 + scaleValue(110));
+    // モード選択ボタン
+    const buttonWidth = scaleValue(350);
+    const buttonHeight = scaleValue(80);
+    const gap = scaleValue(40);
+    const totalHeight = buttonHeight * 2 + gap;
+    const startY = (canvas.height - totalHeight) / 2 + scaleValue(30);
+
+    normalModeButtonRect = { x: (canvas.width - buttonWidth) / 2, y: startY, width: buttonWidth, height: buttonHeight };
+    veryNormalModeButtonRect = { x: (canvas.width - buttonWidth) / 2, y: startY + buttonHeight + gap, width: buttonWidth, height: buttonHeight };
+
+    // Normal Mode ボタン
+    ctx.fillStyle = 'rgba(50, 50, 50, 0.8)';
+    ctx.fillRect(normalModeButtonRect.x, normalModeButtonRect.y, normalModeButtonRect.width, normalModeButtonRect.height);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(normalModeButtonRect.x, normalModeButtonRect.y, normalModeButtonRect.width, normalModeButtonRect.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${scaleValue(32)}px sans-serif`;
+    ctx.fillText('Normal Mode', canvas.width / 2, startY + buttonHeight / 2);
+
+    // Very Normal Mode ボタン
+    ctx.fillStyle = 'rgba(100, 0, 0, 0.8)';
+    ctx.fillRect(veryNormalModeButtonRect.x, veryNormalModeButtonRect.y, veryNormalModeButtonRect.width, veryNormalModeButtonRect.height);
+    ctx.strokeStyle = '#ff8888';
+    ctx.strokeRect(veryNormalModeButtonRect.x, veryNormalModeButtonRect.y, veryNormalModeButtonRect.width, veryNormalModeButtonRect.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${scaleValue(32)}px sans-serif`;
+    ctx.fillText('VeryNormal Mode', canvas.width / 2, startY + buttonHeight + gap + buttonHeight / 2);
+
+    // 操作説明
+    drawControls(veryNormalModeButtonRect.y + buttonHeight + scaleValue(60), true);
 }
 
 function drawGameScreen() {
@@ -1421,6 +1479,15 @@ function backToTitle() {
     canvas.style.display = 'block';
     audioControlsContainer.style.display = 'flex';
     stopAllBgm();
+
+    // ボリュームをデフォルトにリセット
+    const defaultVolume = 0.2;
+    setVolume(defaultVolume);
+    if (audioControls.volumeSlider) {
+        audioControls.volumeSlider.value = defaultVolume;
+    }
+    isMutedByPause = false; // ポーズによるミュートフラグをリセット
+
     setCurrentState(gameState.TITLE);
 }
 
@@ -1509,9 +1576,22 @@ function toggleMute() {
 // --- イベントリスナー設定 ---
 function handleCanvasClick(clickX, clickY) {
     if (currentState === gameState.TITLE) {
-        initGame();
-        playRandomNormalBgm();
-        setCurrentState(gameState.PLAYING);
+        // Normal Mode ボタンの判定
+        if (clickX > normalModeButtonRect.x && clickX < normalModeButtonRect.x + normalModeButtonRect.width &&
+            clickY > normalModeButtonRect.y && clickY < normalModeButtonRect.y + normalModeButtonRect.height) {
+            selectedGameMode = 'Normal';
+            initGame();
+            playRandomNormalBgm();
+            setCurrentState(gameState.PLAYING);
+        }
+        // Very Normal Mode ボタンの判定
+        if (clickX > veryNormalModeButtonRect.x && clickX < veryNormalModeButtonRect.x + veryNormalModeButtonRect.width &&
+            clickY > veryNormalModeButtonRect.y && clickY < veryNormalModeButtonRect.y + veryNormalModeButtonRect.height) {
+            selectedGameMode = 'VeryNormal';
+            initGame();
+            playRandomNormalBgm();
+            setCurrentState(gameState.PLAYING);
+        }
     } else if (currentState === gameState.GAMEOVER) {
         setCurrentState(gameState.TITLE);
     } else if (currentState === gameState.PAUSED) {
@@ -1528,106 +1608,132 @@ function handleCanvasClick(clickX, clickY) {
     }
 }
 
-// PC用
-window.addEventListener('mousedown', (e) => {
-    if (e.target === canvas) {
-        if (e.button === 0) {
-            mouse.left = true;
-            handleCanvasClick(e.clientX, e.clientY);
-        }
-        if (e.button === 2) mouse.right = true;
+window.addEventListener('DOMContentLoaded', () => {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    endingVideo = document.getElementById('endingVideo');
+    clearScreen = document.getElementById('clearScreen');
+    finalScoreEl = document.getElementById('finalScore');
+    playEndingBtn = document.getElementById('playEndingBtn');
+    backToTitleBtn = document.getElementById('backToTitleBtn');
+    ultButton = document.getElementById('ultButton');
+    loading = document.getElementById('loading');
+    reloadButton = document.getElementById('reloadButton');
+    exitButton = document.getElementById('exitButton');
+    orientationOverlay = document.getElementById('orientation-overlay');
+    pauseButton = document.getElementById('pauseButton');
+    scoreEl = document.getElementById('score');
+    lifeEl = document.getElementById('life');
+    ultGaugeBarEl = document.getElementById('ultGaugeBar');
+    pngtuberContainer = document.getElementById('pngtuberContainer');
+    gameUiContainer = document.getElementById('gameUiContainer');
+    voiceMuteButton = document.getElementById('voiceMuteButton');
+    audioControlsContainer = document.getElementById('audioControls');
+    audioControls = {
+        muteButton: document.getElementById('muteButton'),
+        volumeSlider: document.getElementById('volumeSlider'),
+    };
+
+    if (reloadButton) {
+        reloadButton.addEventListener('click', () => location.reload());
     }
-});
-window.addEventListener('mouseup', (e) => {
-    if (e.button === 0) mouse.left = false;
-    if (e.button === 2) mouse.right = false;
-});
-
-// スマホ用
-window.addEventListener('touchstart', (e) => {
-    if (e.target === canvas) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        touchX = touch.clientX;
-        touchY = touch.clientY;
-        handleCanvasClick(touch.clientX, touch.clientY); // タイトル画面や一時停止画面でのタップに対応
+    if (exitButton) {
+        exitButton.addEventListener('click', () => {
+            backToTitle();
+        });
     }
-}, { passive: false });
-
-window.addEventListener('touchmove', (e) => {
-    if (e.target === canvas) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        touchX = touch.clientX;
-        touchY = touch.clientY;
-    }
-}, { passive: false });
-
-window.addEventListener('touchend', (e) => {
-    if (e.target === canvas) {
-        if (currentState !== gameState.PLAYING) {
-             touchX = null;
-             touchY = null;
-        }
-    }
-});
-
-
-if (playEndingBtn) playEndingBtn.addEventListener('click', playEndingVideo);
-if (backToTitleBtn) backToTitleBtn.addEventListener('click', backToTitle);
-if (ultButton) ultButton.addEventListener('click', () => {
-    if (player && ultReady && currentState === gameState.PLAYING) {
-        player.useUlt();
-    }
-});
-
-if (pauseButton) {
-    pauseButton.addEventListener('click', () => {
-        if (currentState === gameState.PLAYING) {
-            setCurrentState(gameState.PAUSED);
-        } else if (currentState === gameState.PAUSED) {
-            setCurrentState(gameState.PLAYING);
+    // PC用
+    window.addEventListener('mousedown', (e) => {
+        if (e.target === canvas) {
+            if (e.button === 0) {
+                mouse.left = true;
+                handleCanvasClick(e.clientX, e.clientY);
+            }
+            if (e.button === 2) mouse.right = true;
         }
     });
-}
+    window.addEventListener('mouseup', (e) => {
+        if (e.button === 0) mouse.left = false;
+        if (e.button === 2) mouse.right = false;
+    });
 
-window.addEventListener('keydown', handleKeyDown);
-window.addEventListener('keyup', (e) => { keys[e.code] = false; });
-if (audioControls.muteButton) audioControls.muteButton.addEventListener('click', toggleMute);
-if (audioControls.volumeSlider) audioControls.volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
-if (voiceMuteButton) voiceMuteButton.addEventListener('click', () => {
-    isVoiceMuted = !isVoiceMuted;
-    voiceMuteButton.textContent = isVoiceMuted ? 'VoiceUnmute' : 'VoiceMute';
-});
+    // Prevent context menu on right-click
+    window.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
 
-function checkOrientation() {
-    if (!isMobile) return;
+    // スマホ用
+    window.addEventListener('touchstart', (e) => {
+        if (e.target === canvas) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchX = touch.clientX;
+            touchY = touch.clientY;
+            handleCanvasClick(touch.clientX, touch.clientY); // タイトル画面や一時停止画面でのタップに対応
+        }
+    }, { passive: false });
 
-    const isPortrait = window.innerHeight > window.innerWidth;
-    if (isPortrait) {
-        orientationOverlay.style.display = 'flex';
-    } else {
-        orientationOverlay.style.display = 'none';
-        // 画面の向きが変わった時にUIを再調整
-        recalculateScaling();
+    window.addEventListener('touchmove', (e) => {
+        if (e.target === canvas) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchX = touch.clientX;
+            touchY = touch.clientY;
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+        if (e.target === canvas) {
+            if (currentState !== gameState.PLAYING) {
+                touchX = null;
+                touchY = null;
+            }
+        }
+    });
+
+
+    if (playEndingBtn) playEndingBtn.addEventListener('click', playEndingVideo);
+    if (backToTitleBtn) backToTitleBtn.addEventListener('click', backToTitle);
+    if (ultButton) ultButton.addEventListener('click', () => {
+        if (player && ultReady && currentState === gameState.PLAYING) {
+            player.useUlt();
+        }
+    });
+
+    if (pauseButton) {
+        pauseButton.addEventListener('click', () => {
+            if (currentState === gameState.PLAYING) {
+                setCurrentState(gameState.PAUSED);
+            } else if (currentState === gameState.PAUSED) {
+                setCurrentState(gameState.PLAYING);
+            }
+        });
     }
-}
 
-window.addEventListener('resize', () => {
-    recalculateScaling();
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+    if (audioControls.muteButton) audioControls.muteButton.addEventListener('click', toggleMute);
+    if (audioControls.volumeSlider) audioControls.volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+    if (voiceMuteButton) voiceMuteButton.addEventListener('click', () => {
+        isVoiceMuted = !isVoiceMuted;
+        voiceMuteButton.textContent = isVoiceMuted ? 'VoiceUnmute' : 'VoiceMute';
+    });
+
+    window.addEventListener('resize', () => {
+        recalculateScaling();
+        checkOrientation();
+    });
+
     checkOrientation();
+    recalculateScaling();
+    loadAssets().catch(error => {
+        console.error("Failed to load assets:", error);
+        const loadingText = document.querySelector('#loading p');
+        if(loadingText) {
+            loadingText.textContent = "アセットの読み込みに失敗しました。リロードしてください。";
+            loadingText.style.color = 'red';
+        }
+    });
+
+    requestAnimationFrame(gameLoop);
 });
-
-checkOrientation();
-
-
-// --- ゲーム開始処理 ---
-loadAssets().catch(error => {
-    console.error("Failed to load assets:", error);
-    ctx.fillStyle = 'red';
-    ctx.font = '20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('アセットの読み込みに失敗しました。リロードしてください。', canvas.width / 2, canvas.height / 2);
-});
-
-requestAnimationFrame(gameLoop);
